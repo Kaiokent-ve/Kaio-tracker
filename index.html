@@ -1,0 +1,2536 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tibia Tracker</title>
+    <style id="themeDynamicStyle">
+        :root {
+            --bg-body: #121212;
+            --bg-card: #1e1e1e;
+            --bg-subcard: #1a1a1a;
+            --accent-primary: #bb86fc;
+            --accent-secondary: #f39c12;
+            --text-main: #e0e0e0;
+            --border-radius: 6px;
+            --font-scale: 12px;
+            --neon-glow-primary: none;
+            --neon-glow-border: none;
+            --neon-glow-text: none;
+            --card-opacity: 1;
+            
+            --tab-rashid-color: #3498db;
+            --tab-creature-color: #e74c3c;
+            --tab-tools-color: #bb86fc;
+            --tab-news-color: #f39c12;
+        }
+    </style>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-body); color: var(--text-main); margin: 0 auto; padding: 6px; font-size: var(--font-scale); max-width: 480px;
+        }
+        body.modal-open { overflow: hidden; position: fixed; width: 100%; left: 0; right: 0; }
+        .app-header {
+            display: flex; justify-content: space-between; align-items: center; background: var(--bg-card);
+            border: 1px solid #333; padding: 6px 10px; border-radius: var(--border-radius); margin-bottom: 6px; position: relative;
+            box-shadow: var(--neon-glow-border); opacity: var(--card-opacity);
+        }
+        .app-title { font-size: 14px; font-weight: bold; color: var(--accent-primary); margin: 0; text-shadow: none; }
+        .header-actions { display: flex; align-items: center; gap: 6px; }
+        .noti-btn {
+            background: #252525; border: 1px solid #444; color: #fff; padding: 4px; border-radius: var(--border-radius);
+            cursor: pointer; position: relative; display: flex; align-items: center; justify-content: center; width: 28px; height: 28px;
+        }
+        .noti-btn svg { width: 15px; height: 15px; fill: var(--text-main); }
+        .noti-badge-top {
+            position: absolute; top: -3px; right: -3px; background: #e74c3c; color: #fff;
+            font-size: 8px; font-weight: bold; border-radius: 8px; padding: 1px 4px; line-height: 1; border: 1px solid var(--bg-card);
+        }
+        .menu-btn {
+            background: #252525; border: 1px solid #444; color: #fff; font-size: 15px; padding: 2px 6px;
+            border-radius: var(--border-radius); cursor: pointer; height: 28px; display: flex; align-items: center; justify-content: center;
+        }
+        .dropdown-menu {
+            display: none; position: absolute; right: 0; top: 36px; background: var(--bg-card); border: 1px solid #444;
+            border-radius: var(--border-radius); box-shadow: 0 4px 12px rgba(0,0,0,0.6); z-index: 1000; width: 195px; flex-direction: column; overflow: hidden;
+        }
+        .dropdown-item {
+            padding: 10px 12px; color: var(--text-main); background: transparent; border: none; text-align: left;
+            width: 100%; cursor: pointer; font-size: 12px; font-weight: bold; border-bottom: 1px solid #2a2a2a;
+        }
+        .dropdown-item:last-child { border-bottom: none; }
+        .dropdown-item:hover, .dropdown-item:active { background: #2a2a2a; color: var(--accent-primary); }
+        
+        #liveToastContainer {
+            position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
+            width: 92%; max-width: 460px; z-index: 2000; display: flex; flex-direction: column; gap: 6px; pointer-events: none;
+        }
+        .live-toast-card {
+            pointer-events: auto; background: var(--bg-card); color: var(--text-main); padding: 8px 10px; border-radius: var(--border-radius);
+            font-size: 11px; cursor: pointer; text-align: left;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.8); border: 1px solid #333; border-left: 4px solid var(--accent-primary);
+            max-height: 100px; overflow: hidden; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); animation: slideDown 0.3s ease;
+        }
+        .live-toast-card.fade-out { opacity: 0; max-height: 0; padding-top: 0; padding-bottom: 0; margin-top: 0; margin-bottom: 0; border-width: 0; }
+        .live-toast-card.death { border-left-color: #e74c3c; border-color: rgba(231, 76, 60, 0.4); }
+        .live-toast-card.level { border-left-color: #2ecc71; border-color: rgba(46, 204, 113, 0.4); }
+        .live-toast-card.deleted { border-left-color: #e67e22; border-color: rgba(230, 126, 34, 0.4); }
+        
+        .toast-title { font-weight: bold; font-size: 11px; margin-bottom: 2px; display: flex; align-items: center; gap: 4px; }
+        .live-toast-card.death .toast-title { color: #ff8787; }
+        .live-toast-card.level .toast-title { color: #2ecc71; }
+        .live-toast-card.deleted .toast-title { color: #f39c12; }
+
+        @keyframes slideDown {
+            from { transform: translateY(-15px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .boosted-container { display: flex; gap: 6px; margin-bottom: 6px; }
+        .boosted-card {
+            flex: 1; background: var(--bg-card); border: 1px solid #333; border-left: 3px solid var(--accent-primary);
+            padding: 6px 8px; border-radius: var(--border-radius); display: flex; align-items: center; justify-content: space-between;
+            box-shadow: var(--neon-glow-border); opacity: var(--card-opacity);
+        }
+        .boosted-card.boss { border-left-color: #e74c3c; }
+        .boosted-info { display: flex; align-items: center; gap: 6px; overflow: hidden; }
+        .boosted-sprite { width: 30px; height: 30px; object-fit: contain; flex-shrink: 0; cursor: pointer; background: transparent; border-radius: 0; }
+        .boosted-title { font-size: 8px; color: #888; text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px; }
+        .boosted-name { font-size: 10px; font-weight: bold; color: var(--accent-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: none; }
+        .boosted-card.boss .boosted-name { color: #ff8787; }
+        
+        .news-buttons-grid { display: flex; gap: 6px; margin-bottom: 6px; }
+        .ticker-card {
+            flex: 1; background: var(--bg-card); border: 1px solid #333; border-left: 3px solid var(--tab-news-color);
+            padding: 6px 8px; border-radius: var(--border-radius); display: flex; align-items: center; justify-content: space-between; gap: 4px;
+            cursor: pointer; transition: background 0.2s, border-color 0.2s; min-width: 0; position: relative;
+            box-shadow: var(--neon-glow-border); opacity: var(--card-opacity);
+        }
+        .ticker-card:hover { background: #222; }
+        .ticker-card.highlighted { border-color: var(--accent-secondary); box-shadow: 0 0 10px rgba(243, 156, 18, 0.5); background: #252018; }
+        .ticker-card.highlighted .boosted-title { color: var(--accent-secondary); }
+        .ticker-info { display: flex; flex-direction: column; gap: 2px; overflow: hidden; flex: 1; }
+        .ticker-text { font-size: 10px; color: #ddd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; }
+
+        .main-news-item {
+            background: var(--bg-subcard); border: 1px solid #2a2a2a; border-left: 3px solid var(--tab-news-color);
+            border-radius: var(--border-radius); padding: 10px 12px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 4px;
+            cursor: pointer; transition: background 0.2s; text-decoration: none; box-shadow: var(--neon-glow-border); opacity: var(--card-opacity);
+        }
+        .main-news-item:hover { background: #222; }
+        .main-news-meta { display: flex; justify-content: space-between; font-size: 9px; color: #888; font-weight: bold; }
+        .main-news-title-link { font-size: 11px; font-weight: bold; color: #ddd; line-height: 1.4; }
+
+        .top-symmetric-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 6px; }
+        .sym-card {
+            background: var(--bg-card); border: 1px solid #333; border-radius: var(--border-radius); padding: 6px 8px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; cursor: pointer;
+            box-shadow: var(--neon-glow-border); min-width: 0; transition: background 0.2s; opacity: var(--card-opacity);
+        }
+        .sym-card:hover { background: #222; }
+        .sym-card.rashid { border-left: 3px solid var(--tab-rashid-color); }
+        .sym-card.creatures { border-left: 3px solid var(--tab-creature-color); }
+        .sym-card.tools { border-left: 3px solid var(--tab-tools-color); }
+
+        .sym-sprite { width: 26px; height: 26px; object-fit: contain; background: transparent; margin-bottom: 2px; }
+        .sym-title { font-size: 8px; color: #888; text-transform: uppercase; font-weight: bold; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sym-value { font-size: 10px; font-weight: bold; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: none; }
+        .sym-card.rashid .sym-value { color: var(--tab-rashid-color); }
+        .sym-card.creatures .sym-value { color: #ff8787; }
+        .sym-card.tools .sym-value { color: var(--tab-tools-color); }
+
+        .search-card {
+            background: var(--bg-card); border: 1px solid #333; padding: 8px 10px;
+            border-radius: var(--border-radius); display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; position: relative;
+            box-shadow: var(--neon-glow-border); opacity: var(--card-opacity);
+        }
+        .search-row { display: flex; gap: 5px; position: relative; }
+        .search-row input, .search-row select {
+            flex: 1; padding: 6px 8px; background: var(--bg-body); border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 12px;
+        }
+        .search-row button {
+            padding: 6px 12px; background: var(--accent-primary); color: #121212; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;
+            box-shadow: var(--neon-glow-primary);
+        }
+
+        .creature-suggestions-box {
+            position: absolute; top: 100%; left: 0; right: 0; background: #181818; border: 1px solid #3498db;
+            border-radius: 0 0 var(--border-radius) var(--border-radius); max-height: 220px; overflow-y: auto; z-index: 1000; box-shadow: 0 6px 15px rgba(0,0,0,0.8);
+            display: none; flex-direction: column;
+        }
+        .suggestion-item {
+            display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid #252525;
+            cursor: pointer; transition: background 0.15s;
+        }
+        .suggestion-item:last-child { border-bottom: none; }
+        .suggestion-item:hover, .suggestion-item:active { background: #222; }
+        .suggestion-name { font-size: 11px; font-weight: bold; color: #3498db; }
+        .suggestion-tag { font-size: 8px; background: rgba(52, 152, 219, 0.2); color: #3498db; border: 1px solid #3498db; border-radius: 3px; padding: 1px 4px; font-weight: bold; }
+
+        .update-alert {
+            display: none; background: rgba(231, 76, 60, 0.15); border: 1px solid #e74c3c;
+            color: #ff8787; padding: 8px; border-radius: var(--border-radius); margin-bottom: 8px; font-size: 11px; line-height: 1.3; cursor: pointer; transition: background 0.2s ease;
+        }
+        .update-alert:hover { background: rgba(231, 76, 60, 0.25); }
+        
+        .search-result {
+            background: var(--bg-card); padding: 8px 10px; border-radius: var(--border-radius); border-left: 3px solid var(--accent-secondary); 
+            display: none; margin-bottom: 8px; border: 1px solid #333; position: relative;
+            will-change: transform, opacity; transform: translateZ(0);
+            box-shadow: var(--neon-glow-border); opacity: var(--card-opacity);
+        }
+        .search-result.floating {
+            position: fixed; top: 10px; left: 50%; transform: translateX(-50%) translateZ(0); width: 92%; max-width: 460px;
+            z-index: 2500; border: 1px solid var(--accent-primary); border-left: 4px solid var(--accent-secondary);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.85), var(--neon-glow-border); animation: slideDown 0.3s ease;
+            touch-action: none; overscroll-behavior: contain; will-change: transform, opacity;
+        }
+        .search-result.error { border-left-color: #e74c3c; color: #ff8787; }
+        .search-close-btn {
+            position: absolute; top: 5px; right: 5px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #777; font-size: 10px; font-weight: bold; cursor: pointer; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; border-radius: 4px; transition: all 0.2s ease;
+        }
+        .search-close-btn:hover, .search-close-btn:active { background: rgba(255, 255, 255, 0.12); color: #ccc; }
+        .detailed-result { display: flex; align-items: center; gap: 10px; padding-right: 16px; }
+        .detailed-info { display: flex; flex-direction: column; gap: 2px; overflow: hidden; flex: 1; }
+        .guild-text { font-size: 10px; color: #3498db; font-weight: bold; }
+        .guild-clickable { cursor: pointer; text-decoration: underline; }
+        .guild-clickable:hover { color: #5dade2; }
+        
+        .world-link { color: #aaa; cursor: pointer; transition: color 0.2s; }
+        .world-link:hover { color: #3498db; text-decoration: underline; }
+
+        .search-actions-row {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 8px; padding-top: 6px; border-top: 1px solid #333; gap: 4px;
+        }
+        .save-options { display: flex; gap: 4px; flex: 1; }
+        .btn-add-cat { flex: 1; padding: 5px; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; font-size: 10px; }
+        .btn-add-bot { background: #e67e22; color: #fff; }
+        .btn-add-enemy { background: #e74c3c; color: #fff; }
+        .btn-add-friend { background: #2ecc71; color: #000; }
+        
+        .tabs-row {
+            display: flex; gap: 3px; background: var(--bg-subcard); padding: 3px; border-radius: var(--border-radius); border: 1px solid #2a2a2a; margin-bottom: 8px; overflow-x: auto;
+        }
+        .tab-btn {
+            flex: 1; padding: 6px 2px; border: 1px solid transparent; background: transparent; color: #888;
+            font-weight: bold; font-size: 8px; border-radius: 4px; cursor: pointer; text-align: center; white-space: nowrap;
+            transition: background 0.2s, color 0.2s, border-color 0.2s;
+        }
+        .tab-btn.active {
+            background: var(--bg-card); color: var(--accent-primary); border: 1px solid var(--accent-primary);
+            text-shadow: none;
+        }
+        
+        .filter-row { display: flex; gap: 3px; margin-bottom: 6px; }
+        .filter-btn {
+            flex: 1; background: var(--bg-subcard); border: 1px solid #2a2a2a; color: #888;
+            padding: 4px; border-radius: 4px; font-size: 9px; font-weight: bold; cursor: pointer; text-align: center;
+        }
+        .filter-btn.active { background: #252525; color: #3498db; border-color: #3498db; }
+        
+        .list-header { display: flex; justify-content: space-between; align-items: center; margin: 4px 0 6px 0; gap: 4px; }
+        .list-title { font-size: 12px; font-weight: bold; color: var(--accent-primary); text-shadow: none; }
+        .header-controls { display: flex; gap: 4px; align-items: center; }
+        .btn-update {
+            background: #2a2a2a; border: 1px solid #3d3d3d; color: #ccc; padding: 4px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: bold;
+        }
+        .btn-update:disabled { opacity: 0.6; cursor: not-allowed; }
+        
+        .fav-container { display: flex; flex-direction: column; gap: 6px; }
+        .fav-card {
+            background: var(--bg-subcard); border: 1px solid #2a2a2a; border-radius: var(--border-radius); padding: 6px 8px; display: flex; flex-direction: column; gap: 4px;
+            box-shadow: var(--neon-glow-border); opacity: var(--card-opacity);
+        }
+        .fav-card.compact { padding: 4px 8px; gap: 2px; }
+        .fav-card.compact .sprite-box { width: 26px; height: 26px; }
+        .fav-card.compact .fav-actions button { padding: 2px 4px; font-size: 9px; }
+
+        .fav-main { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+        .fav-left { display: flex; align-items: center; gap: 8px; overflow: hidden; cursor: pointer; flex: 1; }
+        .sprite-box { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .sprite-img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .status-col { width: 52px; display: flex; justify-content: center; flex-shrink: 0; }
+        
+        .badge { padding: 1px 4px; border-radius: 3px; font-size: 7px; font-weight: bold; text-align: center; white-space: nowrap; }
+        .badge-online { background: rgba(46, 204, 113, 0.25); color: #2ecc71; border: 1px solid #2ecc71; }
+        .badge-offline { background: rgba(149, 165, 166, 0.2); color: #95a5a6; border: 1px solid #7f8c8d; }
+        .badge-deleted { background: rgba(231, 76, 60, 0.25); color: #e74c3c; border: 1px solid #e74c3c; font-size: 7px; }
+
+        .fav-actions { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
+        .btn-action {
+            background: #252525; border: 1px solid #3d3d3d; color: #ccc; cursor: pointer; font-size: 10px; padding: 3px 6px; border-radius: 4px; text-align: center;
+        }
+        .btn-guildstats { background: rgba(187, 134, 252, 0.15); border-color: var(--accent-primary); color: var(--accent-primary); font-weight: bold; }
+        .btn-guildstats:hover { background: rgba(187, 134, 252, 0.3); }
+        .btn-tibspy { background: rgba(52, 152, 219, 0.15); border-color: #3498db; color: #3498db; font-weight: bold; }
+        .btn-tibspy:hover { background: rgba(52, 152, 219, 0.3); }
+        .btn-deaths-action { min-width: 44px; }
+        
+        .char-note-container {
+            display: none; background: var(--bg-body); border: 1px dashed #444; border-radius: 4px; padding: 4px 6px; margin-top: 2px;
+        }
+        .char-note-container.open { display: block; }
+        .char-note-container input {
+            width: 100%; background: #181818; border: 1px solid #333; color: var(--accent-secondary); font-size: 10px; padding: 4px 6px; border-radius: 3px; outline: none;
+        }
+
+        .deaths-box-wrapper {
+            display: none;
+            position: relative;
+            margin-top: 4px;
+        }
+        .deaths-box {
+            background: var(--bg-body); 
+            border: 1px solid #444;
+            border-radius: var(--border-radius);
+            padding: 6px; 
+            max-height: 280px; /* <--- AUMENTADO PARA MOSTRAR APROXIMADAMENTE 6 MUERTES A LA VEZ */
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .mini-scroll-btn {
+            position: absolute;
+            right: 8px;
+            background: rgba(25, 25, 25, 0.85);
+            border: 1px solid #555;
+            color: var(--accent-primary);
+            font-size: 11px;
+            font-weight: bold;
+            width: 22px;
+            height: 22px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            touch-action: manipulation;
+            transition: background 0.15s, transform 0.1s;
+        }
+        .mini-scroll-btn:active {
+            background: #333;
+            transform: scale(0.92);
+        }
+        .mini-scroll-btn.top {
+            top: 6px;
+        }
+        .mini-scroll-btn.bottom {
+            bottom: 6px;
+        }
+
+        .death-row {
+            font-size: 10px; color: #ff8787; margin-bottom: 4px; border-bottom: 1px dashed #222; padding-bottom: 4px; display: flex; align-items: center; gap: 8px;
+        }
+        .death-icon {
+            width: 38px; height: 38px; object-fit: contain; flex-shrink: 0; background: rgba(0, 0, 0, 0.4);
+            border-radius: 4px; border: 1px solid #333; padding: 2px; cursor: pointer;
+        }
+        .death-icon:hover { border-color: #3498db; }
+        .death-time { font-size: 9px; color: #888; font-weight: bold; margin-bottom: 1px; }
+        .clickable-player { color: #3498db; text-decoration: underline; cursor: pointer; font-weight: bold; }
+        
+        .online-player-row {
+            background: var(--bg-subcard); border: 1px solid #2a2a2a; border-radius: var(--border-radius); padding: 8px 10px;
+            display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; transition: background 0.2s;
+            box-shadow: var(--neon-glow-border); opacity: var(--card-opacity);
+        }
+        .online-player-row:hover { background: #222; }
+        .online-player-name { font-weight: bold; color: #3498db; font-size: 12px; cursor: pointer; }
+        .online-player-name:hover { text-decoration: underline; color: #5dade2; }
+        .online-player-info { font-size: 10px; color: #ccc; font-weight: bold; text-align: right; }
+
+        .noti-item, .ticker-list-item {
+            background: var(--bg-subcard); border: 1px solid #2a2a2a; border-left: 3px solid var(--tab-news-color); border-radius: var(--border-radius); padding: 10px 12px; margin-bottom: 8px; font-size: 10px; word-break: break-word; overflow-wrap: anywhere;
+            box-shadow: var(--neon-glow-border); opacity: var(--card-opacity);
+        }
+        .noti-item.death { border-left-color: #e74c3c; }
+        .noti-item.level { border-left-color: #2ecc71; }
+        .noti-item.deleted { border-left-color: #e74c3c; }
+        .noti-header { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 9px; color: #888; font-weight: bold; }
+        .empty-msg { color: #666; font-size: 10px; text-align: center; padding: 15px; font-style: italic; }
+        
+        .world-card {
+            background: var(--bg-subcard); border: 1px solid #2a2a2a; border-radius: var(--border-radius); padding: 8px 10px;
+            display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; transition: background 0.2s; flex-wrap: wrap; gap: 6px;
+            box-shadow: var(--neon-glow-border); opacity: var(--card-opacity);
+        }
+        .world-card.fav-world { border-color: var(--accent-secondary); background: #1a1812; }
+        .world-card:hover { background: #222; }
+        .world-info { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 120px; }
+        .world-name-row { display: flex; align-items: center; gap: 5px; }
+        .world-name { font-weight: bold; color: #fff; font-size: 12px; }
+        .world-prem-badge {
+            background: rgba(241, 196, 15, 0.2); color: var(--accent-secondary); border: 1px solid var(--accent-secondary);
+            font-size: 7px; font-weight: bold; padding: 1px 3px; border-radius: 3px; text-transform: uppercase;
+        }
+        .world-type { font-size: 9px; color: #e67e22; text-transform: uppercase; font-weight: bold; }
+        .world-count {
+            background: rgba(52, 152, 219, 0.2); color: #3498db; border: 1px solid #3498db; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer;
+        }
+
+        .tools-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
+        .tool-card {
+            background: var(--bg-subcard); border: 1px solid #2a2a2a; border-left: 3px solid var(--tab-tools-color); border-radius: var(--border-radius); padding: 10px; text-decoration: none; color: #fff; display: flex; flex-direction: column; gap: 2px; transition: background 0.2s;
+            box-shadow: var(--neon-glow-border); opacity: var(--card-opacity);
+        }
+        .tool-card:hover { background: #222; }
+        .tool-title { font-weight: bold; font-size: 11px; color: var(--accent-primary); text-shadow: none; }
+        .tool-desc { font-size: 9px; color: #888; }
+        
+        .theme-section {
+            background: var(--bg-card); border: 1px solid #333; border-radius: var(--border-radius); padding: 10px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 8px;
+            box-shadow: var(--neon-glow-border);
+        }
+        .theme-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+        .theme-preset-card {
+            background: var(--bg-subcard); border: 1px solid #333; border-radius: 6px; padding: 8px; text-align: center; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: transform 0.15s, border-color 0.15s;
+        }
+        .theme-preset-card:hover, .theme-preset-card.active { border-color: var(--accent-primary); transform: translateY(-2px); }
+        .theme-preview-dots { display: flex; gap: 3px; margin-top: 2px; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2); }
+        .theme-label { font-size: 9px; font-weight: bold; color: var(--text-main); }
+
+        .custom-color-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 10px; }
+
+        .market-modal-content {
+            background: var(--bg-card); border: 1px solid #2ecc71; padding: 12px; border-radius: var(--border-radius);
+            width: 100%; max-width: 400px; max-height: 85vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; position: relative;
+        }
+        .market-item-row {
+            display: flex; align-items: center; justify-content: space-between; border-bottom: 1px dashed #333; padding: 6px 0; font-size: 11px; gap: 8px;
+        }
+        .market-item-row:last-child { border-bottom: none; }
+        .market-item-left { display: flex; align-items: center; gap: 8px; overflow: hidden; }
+        .market-item-img { width: 32px; height: 32px; object-fit: contain; background: rgba(0,0,0,0.4); border-radius: 4px; border: 1px solid #333; padding: 2px; flex-shrink: 0; }
+        .market-val-sell { color: #e74c3c; font-weight: bold; }
+        .market-val-buy { color: #2ecc71; font-weight: bold; }
+
+        .modal {
+            display: none; position: fixed; inset: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,.85); z-index: 3000; justify-content: center; align-items: center; padding: 10px; overscroll-behavior: contain; touch-action: none;
+        }
+        .modal.open { display: flex; }
+        .modal-content {
+            background: var(--bg-card); border: 1px solid var(--accent-primary); padding: 10px; border-radius: var(--border-radius); width: 100%;
+            max-width: 400px; max-height: 85vh; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; touch-action: pan-y; -webkit-overflow-scrolling: touch;
+            box-shadow: var(--neon-glow-border);
+        }
+        .modal-title { font-size: 12px; font-weight: bold; color: var(--accent-primary); text-shadow: none; }
+        .modal-content textarea {
+            width: 100%; height: 140px; background: var(--bg-body); color: #fff; border: 1px solid #444; border-radius: 4px; font-size: 11px; padding: 6px; resize: vertical; overflow-wrap: anywhere;
+        }
+        .modal-buttons { display: flex; gap: 5px; }
+        .modal-buttons button {
+            flex: 1; padding: 8px 6px; font-size: 11px; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; min-height: 36px;
+        }
+        .btn-modal-action { background: var(--accent-primary); color: #121212; box-shadow: var(--neon-glow-primary); }
+        .btn-modal-close { background: #444; color: #fff; }
+        
+        .wiki-modal-content {
+            background: var(--bg-card); border: 1px solid #3498db; padding: 10px 12px; border-radius: var(--border-radius);
+            width: 100%; max-width: 400px; max-height: 85vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; position: relative; touch-action: pan-y; -webkit-overflow-scrolling: touch;
+        }
+        .wiki-header { display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #333; padding-bottom: 6px; padding-right: 20px; }
+        .wiki-img {
+            width: 50px; height: 50px; object-fit: contain; background: rgba(0,0,0,0.4); border-radius: 4px; border: 1px solid #444; padding: 2px; flex-shrink: 0;
+        }
+        .wiki-section-title {
+            font-size: 10px; font-weight: bold; color: #3498db; text-transform: uppercase; margin-top: 2px; border-bottom: 1px dashed #333; padding-bottom: 1px;
+        }
+        .wiki-info-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 10px; background: #161616; padding: 6px; border-radius: 4px; border: 1px solid #2a2a2a;
+        }
+        .wiki-stat-item { display: flex; flex-direction: column; gap: 1px; }
+        .wiki-stat-label { font-size: 8px; color: #888; text-transform: uppercase; font-weight: bold; }
+        .wiki-stat-val { color: #fff; font-weight: bold; }
+        .wiki-full-row {
+            background: #161616; padding: 6px; border-radius: 4px; border: 1px solid #2a2a2a; font-size: 10px; display: flex; flex-direction: column; gap: 1px;
+        }
+        .elements-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; background: #161616; padding: 6px; border-radius: 4px; border: 1px solid #2a2a2a; font-size: 9px; text-align: center;
+        }
+        .elem-box { background: #222; padding: 3px; border-radius: 3px; display: flex; flex-direction: column; align-items: center; }
+        .elem-strong { color: #2ecc71; font-weight: bold; }
+        .elem-weak { color: #e74c3c; font-weight: bold; }
+        .elem-neutral { color: #aaa; font-weight: bold; }
+        .loot-box-container {
+            background: #161616; border: 1px solid #2a2a2a; border-radius: 4px; padding: 6px; font-size: 10px; color: var(--accent-secondary); max-height: 110px; overflow-y: auto; line-height: 1.3; font-weight: bold;
+        }
+
+        .inline-creature-result {
+            background: #161616; border: 1px solid #3498db; border-radius: var(--border-radius); padding: 10px; margin-top: 8px; display: flex; flex-direction: column; gap: 6px;
+        }
+    </style>
+</head>
+<body onclick="closeMenuOnClickOutside(event)">
+
+    <div id="liveToastContainer"></div>
+
+    <div class="app-header">
+        <h1 class="app-title">Tibia Tracker</h1>
+        <div class="header-actions">
+            <button class="noti-btn" onclick="AppNavigation.switchCategory('notifications')" title="Notificaciones">
+                <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/></svg>
+                <span id="notiBadgeTop" class="noti-badge-top" style="display:none;">0</span>
+            </button>
+            <div style="position: relative;">
+                <button class="menu-btn" onclick="toggleMenu(event)">☰</button>
+                <div id="dropdownMenu" class="dropdown-menu">
+                    <button class="dropdown-item" onclick="AppStorage.openExportModal()">💾 Guardar JSON</button>
+                    <button class="dropdown-item" onclick="AppStorage.openImportModal()">📂 Cargar JSON</button>
+                    <button class="dropdown-item" style="color:var(--accent-primary); border-top:1px solid #333;" onclick="AppNavigation.switchCategory('theme')">🎨 Personalizar Apariencia</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="exportModal" class="modal" role="dialog">
+        <div class="modal-content">
+            <div id="exportTitle" class="modal-title">Respaldo:</div>
+            <textarea id="exportTextarea" readonly spellcheck="false"></textarea>
+            <div class="modal-buttons">
+                <button class="btn-modal-action" id="saveBackupFileBtn" type="button">Guardar .json</button>
+                <button class="btn-modal-action" id="copyExportBtn" type="button">Copiar texto</button>
+                <button class="btn-modal-close" onclick="closeModal('exportModal')" type="button">Cerrar</button>
+            </div>
+            <div style="font-size:10px; color:#888;">El archivo se guardará con la fecha actual y la extensión .json correcta.</div>
+        </div>
+    </div>
+
+    <div id="importModal" class="modal" role="dialog">
+        <div class="modal-content">
+            <div class="modal-title">Restaurar Respaldo:</div>
+            <input id="backupFileInput" type="file" accept=".json,application/json,text/plain" style="display:none" onchange="AppStorage.handleFileSelect(event)">
+            <div class="modal-buttons" style="margin-bottom:4px">
+                <button class="btn-modal-action" onclick="document.getElementById('backupFileInput').click()" type="button">📂 Elegir archivo .json</button>
+            </div>
+            <textarea id="importTextarea" placeholder="O pega aquí el código JSON de respaldo..."></textarea>
+            <div class="modal-buttons">
+                <button class="btn-modal-action" onclick="AppStorage.processImportText()" type="button" style="background:#2ecc71; color:#000">Restaurar datos</button>
+                <button class="btn-modal-close" onclick="closeModal('importModal')" type="button">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="creatureWikiModal" class="modal" role="dialog">
+        <div class="wiki-modal-content">
+            <button class="search-close-btn" onclick="closeModal('creatureWikiModal')" title="Cerrar">✕</button>
+            <div class="wiki-header">
+                <img id="wikiModalImg" class="wiki-img" src="" alt="Criatura" onerror="this.onerror=null; this.src=SAFE_FALLBACK_URL;">
+                <div style="overflow:hidden;">
+                    <div class="wiki-stat-label">Tibia Fandom Wiki</div>
+                    <div id="wikiModalName" style="font-size:13px; font-weight:bold; color:#3498db;">Cargando...</div>
+                </div>
+            </div>
+            <div id="wikiModalBody" style="display:flex; flex-direction:column; gap:6px; max-height:65vh; overflow-y:auto; padding-right:2px;">
+                <div style="text-align:center; color:#888; padding:15px;">⏳ Consultando datos completos en Tibia Fandom Wiki...</div>
+            </div>
+            <div class="modal-buttons" style="margin-top:2px;">
+                <button class="btn-modal-close" onclick="closeModal('creatureWikiModal')" type="button">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="marketModal" class="modal" role="dialog">
+        <div class="market-modal-content">
+            <button class="search-close-btn" onclick="closeModal('marketModal')" title="Cerrar">✕</button>
+            <div id="marketModalTitle" style="font-size:13px; font-weight:bold; color:#2ecc71; border-bottom:1px solid #333; padding-bottom:4px;">Market</div>
+            <div id="marketModalBody" style="display:flex; flex-direction:column; gap:4px; max-height:65vh; overflow-y:auto;">
+                <div style="text-align:center; color:#888; padding:15px;">⏳ Consultando precios...</div>
+            </div>
+            <div class="modal-buttons" style="margin-top:4px;">
+                <button class="btn-modal-close" onclick="closeModal('marketModal')" type="button">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="boosted-container">
+        <div class="boosted-card">
+            <div class="boosted-info">
+                <img id="boostedImg" class="boosted-sprite" src="" alt="Criatura" onclick="openCreatureWiki(document.getElementById('boostedName').textContent, event)" title="Ver estadísticas completas" onerror="this.onerror=null; this.src=SAFE_FALLBACK_URL;">
+                <div style="overflow:hidden;">
+                    <div class="boosted-title">Boosted Creature</div>
+                    <div id="boostedName" class="boosted-name" onclick="openCreatureWiki(this.textContent, event)" style="cursor:pointer;" title="Ver estadísticas completas">Cargando...</div>
+                </div>
+            </div>
+        </div>
+        <div class="boosted-card boss">
+            <div class="boosted-info">
+                <img id="boostedBossImg" class="boosted-sprite" src="" alt="Boss" onclick="openCreatureWiki(document.getElementById('boostedBossName').textContent, event)" title="Ver estadísticas completas" onerror="this.onerror=null; this.src=SAFE_FALLBACK_URL;">
+                <div style="overflow:hidden;">
+                    <div class="boosted-title">Boosted Boss</div>
+                    <div id="boostedBossName" class="boosted-name" onclick="openCreatureWiki(this.textContent, event)" style="cursor:pointer;" title="Ver estadísticas completas">Cargando...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="news-buttons-grid">
+        <div id="tickerCard" class="ticker-card" onclick="openNewsCategory('news')" title="Ver todos los avisos recientes">
+            <div class="ticker-info">
+                <div class="boosted-title">📢 News Ticker</div>
+                <div id="tickerLatestText" class="ticker-text">Cargando último aviso...</div>
+            </div>
+        </div>
+        <div id="mainNewsCard" class="ticker-card" onclick="openNewsCategory('mainnews')" title="Ver noticias principales y anuncios oficiales">
+            <div class="ticker-info">
+                <div class="boosted-title">📰 News</div>
+                <div id="mainNewsLatestText" class="ticker-text">Ver artículos oficiales</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="top-symmetric-grid">
+        <div class="sym-card rashid" onclick="openRashidDetails()" title="Ver ubicación de Rashid">
+            <img id="rashidImg" class="sym-sprite" src="https://outfit-images.ots.me/latest_walk/animoutfit.php?id=146&addons=3&head=102&body=101&legs=122&feet=115&direction=3" alt="Rashid" onerror="this.onerror=null; this.src=SAFE_FALLBACK_URL;">
+            <div class="sym-title">Rashid Hoy</div>
+            <div id="rashidLocation" class="sym-value">Cargando...</div>
+        </div>
+        <div class="sym-card creatures" onclick="AppNavigation.switchCategory('creatures')" title="Bestiario">
+            <img id="bestiaryIconImg" class="sym-sprite" src="https://outfit-images.ots.me/latest/outfit.php?id=128&addons=0" alt="Ferumbras" onerror="this.onerror=null; this.src=SAFE_FALLBACK_URL;">
+            <div class="sym-title">Bestiario</div>
+            <div class="sym-value">Wiki & Stats</div>
+        </div>
+        <div class="sym-card tools" onclick="AppNavigation.switchCategory('tools')" title="Herramientas">
+            <img id="toolsIconImg" class="sym-sprite" src="https://outfit-images.ots.me/latest/outfit.php?id=128&addons=0" alt="Tools" onerror="this.onerror=null; this.src=SAFE_FALLBACK_URL;">
+            <div class="sym-title">Herramientas</div>
+            <div class="sym-value">Utilidades</div>
+        </div>
+    </div>
+
+    <div class="search-card">
+        <div class="search-row">
+            <input type="text" id="searchInput" placeholder="Nombre del personaje (Ej: Bubble)" autocomplete="off" onkeypress="handleSearchKey(event)">
+            <button onclick="CharacterManager.search()">Buscar</button>
+        </div>
+    </div>
+
+    <div id="searchResult" class="search-result"></div>
+
+    <div id="updateAlert" class="update-alert" onclick="AppNavigation.openNotificationsAndHideAlert()"></div>
+
+    <div class="tabs-row">
+        <button id="tab-bots" class="tab-btn active" onclick="AppNavigation.switchCategory('bots')">🤖 Bots</button>
+        <button id="tab-enemies" class="tab-btn" onclick="AppNavigation.switchCategory('enemies')">⚔️ Enemigos</button>
+        <button id="tab-friends" class="tab-btn" onclick="AppNavigation.switchCategory('friends')">🛡️ Amigos</button>
+        <button id="tab-worlds" class="tab-btn" onclick="AppNavigation.switchCategory('worlds')">🌍 Servidores</button>
+    </div>
+
+    <div id="filterRow" class="filter-row">
+        <button id="filter-all" class="filter-btn active" onclick="AppNavigation.setFilter('all')">Todos</button>
+        <button id="filter-online" class="filter-btn" onclick="AppNavigation.setFilter('online')">🟢 Online</button>
+        <button id="filter-offline" class="filter-btn" onclick="AppNavigation.setFilter('offline')">🔴 Offline</button>
+    </div>
+
+    <!-- SUB-FILTRO SELECTOR DE SERVIDORES (OPEN PVP / OPTIONAL PVP) -->
+    <div id="worldFilterRow" class="filter-row" style="display: none;">
+        <button id="world-filter-open" class="filter-btn active" onclick="setWorldTypeFilter('open')">⚔️ Open PvP</button>
+        <button id="world-filter-optional" class="filter-btn" onclick="setWorldTypeFilter('optional')">🕊️ Optional PvP (No PvP)</button>
+    </div>
+
+    <div class="list-header">
+        <span id="currentListTitle" class="list-title">🤖 Lista de Bots</span>
+        <div class="header-controls">
+            <button id="btnCompactToggle" class="btn-update" onclick="toggleCompactMode()" title="Cambiar tamaño de vista">📱 Compacto</button>
+            <button id="btnUpdateFavs" class="btn-update" onclick="CharacterManager.updateAll()" title="Actualizar todo">🔄</button>
+        </div>
+    </div>
+
+    <div id="favList" class="fav-container"></div>
+
+    <script>
+        const STORAGE_KEY = 'tibia_chars_cat_v2';
+        const NOTIFICATIONS_KEY = 'tibia_notifications_v1';
+        const READ_TICKER_KEY = 'tibia_read_ticker_id_v1';
+        const READ_MAINNEWS_KEY = 'tibia_read_mainnews_id_v1';
+        const FAV_WORLDS_KEY = 'tibia_fav_worlds_v1';
+        const COMPACT_MODE_KEY = 'tibia_compact_mode_v1';
+        const THEME_STORAGE_KEY = 'tibia_app_theme_custom_v8';
+        const MAX_NOTIFICATIONS = 30;
+
+        const PRESET_THEMES = {
+            'tibia-dark': { name: 'Tibia Dark', bgBody: '#121212', bgCard: '#1e1e1e', bgSubcard: '#1a1a1a', primary: '#bb86fc', secondary: '#f39c12', textMain: '#e0e0e0' },
+            'oled-black': { name: 'OLED Pure', bgBody: '#000000', bgCard: '#0f0f0f', bgSubcard: '#080808', primary: '#ffffff', secondary: '#3498db', textMain: '#ffffff' },
+            'midnight-blue': { name: 'Midnight Blue', bgBody: '#0b0f19', bgCard: '#131b2e', bgSubcard: '#0d1322', primary: '#38bdf8', secondary: '#818cf8', textMain: '#f1f5f9' },
+            'charcoal-slate': { name: 'Charcoal Slate', bgBody: '#18181b', bgCard: '#27272a', bgSubcard: '#202023', primary: '#f43f5e', secondary: '#fbbf24', textMain: '#fafafa' },
+            'forest-dim': { name: 'Forest Dim', bgBody: '#09120a', bgCard: '#112214', bgSubcard: '#0d190f', primary: '#4ade80', secondary: '#facc15', textMain: '#f0fdf4' },
+            'coffee-mocha': { name: 'Coffee Mocha', bgBody: '#14100d', bgCard: '#241b16', bgSubcard: '#1c1510', primary: '#fb923c', secondary: '#f43f5e', textMain: '#fef3c7' },
+            'deep-purple': { name: 'Deep Purple', bgBody: '#100b16', bgCard: '#1d1329', bgSubcard: '#170f20', primary: '#c084fc', secondary: '#38bdf8', textMain: '#faf5ff' },
+            'crimson-night': { name: 'Crimson Night', bgBody: '#14080a', bgCard: '#241014', bgSubcard: '#1b0c0f', primary: '#fb7185', secondary: '#fbbf24', textMain: '#fff1f2' },
+            'cyber-purple': { name: 'Cyber Purple', bgBody: '#07050d', bgCard: '#130d22', bgSubcard: '#0c0817', primary: '#bf00ff', secondary: '#00ffff', textMain: '#f0e6ff' },
+            'tron-blue': { name: 'Tron Blue', bgBody: '#030a10', bgCard: '#081726', bgSubcard: '#05101a', primary: '#00d2ff', secondary: '#ff007f', textMain: '#e0f7ff' },
+            'matrix-green': { name: 'Matrix Green', bgBody: '#020d06', bgCard: '#081f10', bgSubcard: '#05140a', primary: '#00ff66', secondary: '#00ffff', textMain: '#d8ffd8' },
+            'vampire-red': { name: 'Vampire Blood', bgBody: '#140808', bgCard: '#221010', bgSubcard: '#1a0d0d', primary: '#ff0055', secondary: '#ffaa00', textMain: '#f5d6d6' },
+            'hot-pink': { name: 'Hot Pink Neon', bgBody: '#0d0208', bgCard: '#220816', bgSubcard: '#17050f', primary: '#ff1493', secondary: '#00ffcc', textMain: '#ffe4f1' },
+            'solar-flare': { name: 'Solar Flare', bgBody: '#0f0702', bgCard: '#241206', bgSubcard: '#190c04', primary: '#ff5500', secondary: '#ffee00', textMain: '#fff3e0' },
+            'royal-gold': { name: 'Royal Gold', bgBody: '#0d0a02', bgCard: '#211a06', bgSubcard: '#171204', primary: '#ffd700', secondary: '#ff4500', textMain: '#fffbe0' },
+            'frostbite': { name: 'Frostbite', bgBody: '#020a0d', bgCard: '#081c24', bgSubcard: '#051218', primary: '#00f2fe', secondary: '#4facfe', textMain: '#e0fbfc' },
+            'toxic-acid': { name: 'Toxic Acid', bgBody: '#060d02', bgCard: '#122406', bgSubcard: '#0c1804', primary: '#adff2f', secondary: '#ff00ff', textMain: '#f0ffe0' },
+            'blood-neon': { name: 'Blood Neon', bgBody: '#0f0202', bgCard: '#260606', bgSubcard: '#1a0404', primary: '#ff2a2a', secondary: '#9400d3', textMain: '#ffe6e6' },
+            'retro-arcade': { name: 'Retro Arcade', bgBody: '#050510', bgCard: '#0e0e24', bgSubcard: '#090918', primary: '#ff0055', secondary: '#00ffcc', textMain: '#ffffff' },
+            'emerald-cyber': { name: 'Emerald Cyber', bgBody: '#010d08', bgCard: '#041f14', bgSubcard: '#02140c', primary: '#00ff88', secondary: '#00ccff', textMain: '#e0fff4' },
+            'sunset-synth': { name: 'Sunset Synth', bgBody: '#0d0510', bgCard: '#200c24', bgSubcard: '#150718', primary: '#ff7700', secondary: '#ff00cc', textMain: '#ffeefc' },
+            'deep-ocean': { name: 'Deep Ocean', bgBody: '#020610', bgCard: '#0a1428', bgSubcard: '#060e1d', primary: '#3b82f6', secondary: '#06b6d4', textMain: '#e2e8f0' },
+            'cyber-yellow': { name: 'Cyber Yellow', bgBody: '#0f0f02', bgCard: '#222206', bgSubcard: '#171704', primary: '#facc15', secondary: '#ef4444', textMain: '#fef08a' },
+            'lavender-mist': { name: 'Lavender Mist', bgBody: '#0a0710', bgCard: '#171026', bgSubcard: '#100b1c', primary: '#c084fc', secondary: '#f43f5e', textMain: '#f3e8ff' }
+        };
+
+        let currentThemeConfig = { 
+            ...PRESET_THEMES['tibia-dark'], 
+            borderRadius: '6px', 
+            fontScale: '12px', 
+            neonEnabled: false, 
+            neonIntensity: '3px',
+            cardOpacity: '1'
+        };
+
+        const ThemeManager = {
+            init() {
+                try {
+                    let saved = localStorage.getItem(THEME_STORAGE_KEY);
+                    if (saved) {
+                        currentThemeConfig = { ...currentThemeConfig, ...JSON.parse(saved) };
+                    }
+                } catch(e){}
+                this.applyStyle();
+            },
+            applyStyle() {
+                let styleEl = document.getElementById('themeDynamicStyle');
+                if (!styleEl) return;
+                
+                let intensity = currentThemeConfig.neonIntensity || '3px';
+                let neonBorder = currentThemeConfig.neonEnabled ? `0 0 ${intensity} ${currentThemeConfig.primary}88, inset 0 0 2px ${currentThemeConfig.primary}44` : 'none';
+                let neonBtnGlow = currentThemeConfig.neonEnabled ? `0 0 ${intensity} ${currentThemeConfig.primary}` : 'none';
+
+                styleEl.innerHTML = `
+                    :root {
+                        --bg-body: ${currentThemeConfig.bgBody};
+                        --bg-card: ${currentThemeConfig.bgCard};
+                        --bg-subcard: ${currentThemeConfig.bgSubcard};
+                        --accent-primary: ${currentThemeConfig.primary};
+                        --accent-secondary: ${currentThemeConfig.secondary};
+                        --text-main: ${currentThemeConfig.textMain};
+                        --border-radius: ${currentThemeConfig.borderRadius || '6px'};
+                        --font-scale: ${currentThemeConfig.fontScale || '12px'};
+                        --neon-glow-primary: ${neonBtnGlow};
+                        --neon-glow-border: ${neonBorder};
+                        --neon-glow-text: none;
+                        --card-opacity: ${currentThemeConfig.cardOpacity || '1'};
+                        --tab-rashid-color: #3498db;
+                        --tab-creature-color: #e74c3c;
+                        --tab-tools-color: #bb86fc;
+                        --tab-news-color: #f39c12;
+                    }
+                `;
+            },
+            save() {
+                try {
+                    localStorage.setItem(THEME_STORAGE_KEY, JSON.stringify(currentThemeConfig));
+                } catch(e){}
+                this.applyStyle();
+            },
+            setPreset(presetKey) {
+                if (PRESET_THEMES[presetKey]) {
+                    let p = PRESET_THEMES[presetKey];
+                    currentThemeConfig.bgBody = p.bgBody;
+                    currentThemeConfig.bgCard = p.bgCard;
+                    currentThemeConfig.bgSubcard = p.bgSubcard;
+                    currentThemeConfig.primary = p.primary;
+                    currentThemeConfig.secondary = p.secondary;
+                    currentThemeConfig.textMain = p.textMain;
+                    this.save();
+                    if (currentCategory === 'theme') UIComponents.renderThemeTab();
+                }
+            },
+            updateCustom(key, val) {
+                currentThemeConfig[key] = val;
+                this.save();
+            },
+            toggleNeon(isChecked) {
+                currentThemeConfig.neonEnabled = isChecked;
+                this.save();
+            }
+        };
+
+        ThemeManager.init();
+
+        const NOTIF_TEXTS = {
+            deathTitle: '☠️ MUERTE',
+            levelTitle: '🎉 NIVEL',
+            deletedTitle: '⚠️ ESTADO',
+            levelMsg: (level) => `Avanzó al Nivel ${level}`,
+            deletedMsg: 'Personaje baneado o eliminado de los registros.'
+        };
+
+        let favorites = [];
+        let notifications = [];
+        let favWorlds = [];
+        let isCompactMode = false;
+        let cachedWorlds = null;
+        let cachedNewsTickers = null;
+        let cachedMainNews = null;
+        let cachedTibiaDataCreatures = null;
+        let viewingWorldDetails = null; 
+        let currentWorldPlayersCache = []; 
+        let sortDescOrder = true; 
+        let currentFilterStatus = 'all';
+        let currentNotiFilter = 'all';
+        let currentWorldType = 'open'; // 'open' o 'optional'
+
+        try {
+            favorites = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+            notifications = JSON.parse(localStorage.getItem(NOTIFICATIONS_KEY)) || [];
+            favWorlds = JSON.parse(localStorage.getItem(FAV_WORLDS_KEY)) || [];
+            isCompactMode = localStorage.getItem(COMPACT_MODE_KEY) === 'true';
+        } catch (e) {
+            favorites = [];
+            notifications = [];
+            favWorlds = [];
+            isCompactMode = false;
+        }
+
+        let savedScrollPosition = 0;
+
+        function openModal(id) {
+            savedScrollPosition = window.scrollY || window.pageYOffset;
+            document.getElementById(id).classList.add('open');
+            document.body.classList.add('modal-open');
+            document.body.style.top = `-${savedScrollPosition}px`;
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('open');
+            document.body.classList.remove('modal-open');
+            document.body.style.top = '';
+            window.scrollTo(0, savedScrollPosition);
+        }
+
+        function toggleCompactMode() {
+            isCompactMode = !isCompactMode;
+            try { localStorage.setItem(COMPACT_MODE_KEY, isCompactMode); } catch(e){}
+            let btn = document.getElementById('btnCompactToggle');
+            if (btn) btn.style.borderColor = isCompactMode ? 'var(--accent-primary)' : '#3d3d3d';
+            UIComponents.renderFavs();
+        }
+
+        function toggleWorldFavorite(worldName, event) {
+            if (event) { event.stopPropagation(); event.preventDefault(); }
+            if (favWorlds.includes(worldName)) {
+                favWorlds = favWorlds.filter(w => w !== worldName);
+            } else {
+                favWorlds.push(worldName);
+            }
+            try { localStorage.setItem(FAV_WORLDS_KEY, JSON.stringify(favWorlds)); } catch(e){}
+            UIComponents.renderWorlds();
+        }
+
+        function toggleNoteBox(safeId, event) {
+            if (event) { event.stopPropagation(); }
+            let box = document.getElementById(safeId);
+            if (!box) return;
+            box.classList.toggle('open');
+        }
+
+        function updateCharacterNote(charName, noteVal) {
+            let char = favorites.find(f => f.name.toLowerCase() === charName.toLowerCase());
+            if (char) {
+                char.note = noteVal;
+                AppStorage.save();
+            }
+        }
+
+        function openGuildStats(charName) {
+            window.open(`https://guildstats.eu/character?nick=${encodeURIComponent(charName)}`, '_blank');
+        }
+
+        function openTibSpy(charName) {
+            let textArea = document.createElement("textarea");
+            textArea.value = charName;
+            textArea.style.cssText = "position:fixed;top:0;left:0;width:2em;height:2em;padding:0;border:none;outline:none;box-shadow:none;background:transparent;";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try { document.execCommand('copy'); } catch (err) {}
+            document.body.removeChild(textArea);
+            window.open('https://tibspy.com/', '_blank');
+        }
+
+        function openTibiaRingWorld(worldName, event) {
+            if (event) { event.stopPropagation(); event.preventDefault(); }
+            if (!worldName || worldName === '...' || worldName === 'Desconocido') return;
+            const cleanWorld = encodeURIComponent(worldName.trim());
+            window.open(`https://www.tibiaring.com/bot.php/?w=${cleanWorld}&lang=es`, '_blank');
+        }
+
+        function openNewsCategory(type) {
+            if (type === 'news') {
+                if (cachedNewsTickers && cachedNewsTickers.length > 0) {
+                    let latest = cachedNewsTickers[0];
+                    let latestId = String(latest.id || latest.news_id || latest.date || latest.text || '');
+                    if (latestId) localStorage.setItem(READ_TICKER_KEY, latestId);
+                }
+                document.getElementById('tickerCard').classList.remove('highlighted');
+                AppNavigation.switchCategory('news');
+            } else if (type === 'mainnews') {
+                if (cachedMainNews && cachedMainNews.length > 0) {
+                    let latestMain = cachedMainNews[0];
+                    let latestMainId = String(latestMain.id || latestMain.news_id || latestMain.date || latestMain.news || '');
+                    if (latestMainId) localStorage.setItem(READ_MAINNEWS_KEY, latestMainId);
+                }
+                document.getElementById('mainNewsCard').classList.remove('highlighted');
+                AppNavigation.switchCategory('mainnews');
+            }
+        }
+
+        function openRashidDetails() {
+            const rashidSchedule = [
+                { day: 'Domingo', city: 'Carlin', location: 'Depósito (1 planta arriba)' },
+                { day: 'Lunes', city: 'Svargrond', location: 'Taberna de Dankwart (Sur del templo)' },
+                { day: 'Martes', city: 'Liberty Bay', location: 'Taberna de Lyonel (Oeste del depósito)' },
+                { day: 'Miércoles', city: 'Port Hope', location: 'Taberna de Clyde (Oeste del depósito)' },
+                { day: 'Jueves', city: 'Ankrahmun', location: 'Taberna de Arito (Sobre la oficina postal)' },
+                { day: 'Viernes', city: 'Darashia', location: 'Taberna de Miraia (Sur de los guildhalls)' },
+                { day: 'Sábado', city: 'Edron', location: 'Taberna de Mirabell (Sobre depósito/banco)' }
+            ];
+            let todayRashid = rashidSchedule[new Date().getDay()];
+            alert(`📍 Rashid Hoy (${todayRashid.day}):\nCiudad: ${todayRashid.city}\nLugar: ${todayRashid.location}`);
+        }
+
+        async function openWorldMarket(worldName, event) {
+            if (event) { event.stopPropagation(); event.preventDefault(); }
+            if (!worldName) return;
+
+            document.getElementById('marketModalTitle').textContent = `🛒 Market: ${worldName}`;
+            document.getElementById('marketModalBody').innerHTML = `<div style="text-align:center; color:#888; padding:15px;">⏳ Consultando ítems en ${worldName}...</div>`;
+            openModal('marketModal');
+
+            let url = `https://api.tibiamarket.top/market_values?server=${encodeURIComponent(worldName)}&item_ids=22007,3049,22118`;
+            let maxRetries = 3;
+            let success = false;
+            let itemsData = null;
+
+            for (let attempt = 1; attempt <= maxRetries; attempt++) {
+                try {
+                    let res = await fetch(url);
+                    if (res.ok) {
+                        let data = await res.json();
+                        if (Array.isArray(data) && data.length > 0) {
+                            itemsData = data;
+                            success = true;
+                            break;
+                        }
+                    }
+                } catch (err) {}
+
+                if (attempt < maxRetries) await new Promise(resolve => setTimeout(resolve, 800));
+            }
+
+            let bodyBox = document.getElementById('marketModalBody');
+            if (!success || !itemsData) {
+                bodyBox.innerHTML = `<div style="color:#ff8787; text-align:center; padding:15px;">⚠️ La API tardó en responder o no hay datos para ${worldName}. Vuelve a intentar.</div>`;
+                return;
+            }
+
+            const itemMetadata = {
+                "22007": { name: "Gloom Wolf Fur", img: "https://item-images.ots.me/latest_otbr/22007.png" },
+                "3049": { name: "Stealth Ring", img: "https://item-images.ots.me/latest_otbr/3049.png" },
+                "22118": { name: "Tibia Coins", img: "https://item-images.ots.me/latest_otbr/22118.png" }
+            };
+
+            const desiredOrder = ["22007", "3049", "22118"];
+            itemsData.sort((a, b) => {
+                let idA = String(a.item_id || a.id || '');
+                let idB = String(b.item_id || b.id || '');
+                return desiredOrder.indexOf(idA) - desiredOrder.indexOf(idB);
+            });
+
+            let htmlContent = '';
+            itemsData.forEach(item => {
+                let id = String(item.item_id || item.id || '');
+                let meta = itemMetadata[id] || { name: item.name || `Ítem #${id}`, img: SAFE_FALLBACK_URL };
+                let sellPrice = (item.sell_offer && item.sell_offer > 0) ? `${item.sell_offer.toLocaleString()} gp` : 'Sin ofertas';
+                let buyPrice = (item.buy_offer && item.buy_offer > 0) ? `${item.buy_offer.toLocaleString()} gp` : 'Sin ofertas';
+
+                htmlContent += `
+                    <div class="market-item-row">
+                        <div class="market-item-left">
+                            <img class="market-item-img" src="${meta.img}" alt="${meta.name}" onerror="this.onerror=null; this.src='${SAFE_FALLBACK_URL}';">
+                            <div><b>${meta.name}</b></div>
+                        </div>
+                        <div style="text-align:right;">
+                            <span class="market-val-sell">🔴 Venta: ${sellPrice}</span><br>
+                            <span class="market-val-buy">🟢 Compra: ${buyPrice}</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            bodyBox.innerHTML = htmlContent || `<div style="color:#888; text-align:center; padding:15px;">Sin datos de mercado disponibles.</div>`;
+        }
+
+        function triggerLiveToast(type, title, message) {
+            let container = document.getElementById('liveToastContainer');
+            if (!container) return;
+
+            let toast = document.createElement('div');
+            toast.className = `live-toast-card ${type}`;
+            toast.innerHTML = `
+                <div class="toast-title">${title}</div>
+                <div style="color:#ccc; font-size:11px;">${message}</div>
+                <div style="font-size:9px; color:#777; margin-top:2px;">Toca para ver el historial</div>
+            `;
+            
+            toast.onclick = () => {
+                toast.classList.add('fade-out');
+                setTimeout(() => toast.remove(), 500);
+                AppNavigation.switchCategory('notifications');
+            };
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.classList.add('fade-out');
+                    setTimeout(() => { if (toast.parentElement) toast.remove(); }, 500);
+                }
+            }, 8000);
+
+            try { if (navigator.vibrate) navigator.vibrate([200, 100, 200]); } catch(e) {}
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(type === 'death' ? 440 : 660, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+            } catch(e) {}
+        }
+
+        const AppStorage = {
+            save() {
+                try { localStorage.setItem(STORAGE_KEY, JSON.stringify(favorites)); } catch (e) {}
+            },
+            saveNotifications() {
+                try {
+                    if (notifications.length > MAX_NOTIFICATIONS) notifications = notifications.slice(0, MAX_NOTIFICATIONS);
+                    localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(notifications));
+                    UIComponents.updateNotiBadge();
+                } catch (e) {}
+            },
+            getBackupFilename() {
+                return `tibia_respaldo_${new Date().toISOString().split('T')[0]}.json`;
+            },
+            openExportModal() {
+                if (favorites.length === 0) { alert('No hay personajes guardados para exportar.'); return; }
+                let lightweightData = favorites.map(f => ({ name: f.name, category: f.category || 'bots', note: f.note || '' }));
+                let filename = this.getBackupFilename();
+                document.getElementById('exportTitle').textContent = `Respaldo (${filename}):`;
+                document.getElementById('exportTextarea').value = JSON.stringify(lightweightData, null, 2);
+                openModal('exportModal');
+            },
+            async saveBackupFile() {
+                let lightweightData = favorites.map(f => ({ name: f.name, category: f.category || 'bots', note: f.note || '' }));
+                let content = JSON.stringify(lightweightData, null, 2);
+                let filename = this.getBackupFilename();
+
+                try {
+                    if (typeof File !== 'undefined' && navigator.share && navigator.canShare) {
+                        const file = new File([content], filename, { type: 'application/json' });
+                        if (navigator.canShare({ files: [file] })) {
+                            await navigator.share({ files: [file], title: 'Respaldo Tibia', text: 'Guarda tu archivo .json' });
+                            return;
+                        }
+                    }
+                } catch (error) {
+                    if (error && error.name === 'AbortError') return;
+                }
+
+                try {
+                    let blob = new Blob([content], { type: 'application/json;charset=utf-8' });
+                    let url = URL.createObjectURL(blob);
+                    let a = document.createElement('a');
+                    a.href = url; a.download = filename; a.style.display = 'none';
+                    document.body.appendChild(a); a.click(); a.remove();
+                    setTimeout(() => URL.revokeObjectURL(url), 30000);
+                } catch (e) {
+                    alert('Usa el botón de "Copiar texto" si tu APK bloquea la descarga directa.');
+                }
+            },
+            async copyExportText() {
+                let textarea = document.getElementById('exportTextarea');
+                textarea.focus(); textarea.select();
+                try {
+                    if (navigator.clipboard && window.isSecureContext) {
+                        await navigator.clipboard.writeText(textarea.value);
+                        alert('¡Respaldo copiado al portapapeles!');
+                    } else {
+                        document.execCommand('copy');
+                        alert('¡Respaldo copiado!');
+                    }
+                } catch (e) { alert('Selecciona y copia el texto manualmente.'); }
+            },
+            openImportModal() {
+                document.getElementById('importTextarea').value = '';
+                openModal('importModal');
+            },
+            handleFileSelect(event) {
+                let file = event.target.files && event.target.files[0];
+                if (!file) return;
+                let reader = new FileReader();
+                reader.onload = function(e) { document.getElementById('importTextarea').value = e.target.result; };
+                reader.readAsText(file);
+                event.target.value = '';
+            },
+            processImportText() {
+                let text = document.getElementById('importTextarea').value.trim();
+                if (!text) { alert('Pega primero el código JSON o selecciona un archivo.'); return; }
+                try {
+                    let imported = JSON.parse(text);
+                    if (Array.isArray(imported)) {
+                        CharacterManager.mergeList(imported);
+                        closeModal('importModal');
+                        alert('¡Respaldo JSON cargado e integrado con éxito!');
+                    } else { alert('Formato de archivo JSON inválido.'); }
+                } catch (err) { alert('No se pudo leer el archivo o texto JSON.'); }
+            }
+        };
+
+        const NotificationManager = {
+            add(type, title, message) {
+                let newNoti = { id: Date.now() + Math.random(), type, title, message, timestamp: new Date().toISOString(), read: false };
+                notifications.unshift(newNoti);
+                AppStorage.saveNotifications();
+            },
+            clearAll() { notifications = []; AppStorage.saveNotifications(); UIComponents.renderNotifications(); },
+            markAllAsRead() { notifications.forEach(n => n.read = true); AppStorage.saveNotifications(); }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const saveBtn = document.getElementById('saveBackupFileBtn');
+            const copyBtn = document.getElementById('copyExportBtn');
+            if (saveBtn) saveBtn.addEventListener('click', () => AppStorage.saveBackupFile());
+            if (copyBtn) copyBtn.addEventListener('click', () => AppStorage.copyExportText());
+            let btn = document.getElementById('btnCompactToggle');
+            if (btn && isCompactMode) btn.style.borderColor = 'var(--accent-primary)';
+        });
+
+        const TibiaAPI = {
+            async fetchBoostedData() {
+                let creatureObj = null, bossObj = null;
+                try {
+                    let res = await fetch('https://api.tibiadata.com/v4/creatures');
+                    if (res.ok) {
+                        let data = await res.json();
+                        let root = data.creatures || data.data?.creatures || data;
+                        let boosted = root?.boosted || root?.boosted_creature || root?.creature || null;
+                        if (boosted?.name) creatureObj = { name: boosted.name };
+                    }
+                } catch(e) {}
+
+                try {
+                    let resBoss = await fetch('https://api.tibiadata.com/v4/boostablebosses');
+                    if (resBoss.ok) {
+                        let dataBoss = await resBoss.json();
+                        let bossRoot = dataBoss.boostable_bosses || dataBoss.data?.boostable_bosses || dataBoss;
+                        let boostedBoss = bossRoot?.boosted || bossRoot?.boosted_boss || null;
+                        if (boostedBoss?.name) bossObj = { name: boostedBoss.name };
+                    }
+                } catch(e) {}
+
+                if (!creatureObj) creatureObj = { name: 'Ancient Scarab' };
+                if (!bossObj) bossObj = { name: 'Mazoran' };
+                return { creature: creatureObj, boss: bossObj };
+            },
+            async fetchNewsTickers() {
+                try {
+                    let res = await fetch('https://api.tibiadata.com/v4/news/newsticker');
+                    if (!res.ok) return [];
+                    let data = await res.json();
+                    let items = data.news || data.data?.news || data.newsticker || data.data?.newsticker || data.entries || data.data?.entries;
+                    if (!items && Array.isArray(data)) items = data;
+                    if (!Array.isArray(items)) return [];
+
+                    let now = new Date();
+                    let recentItems = items.filter(item => {
+                        let dateStr = item.date || item.publication_date || item.timestamp;
+                        if (!dateStr) return true;
+                        let itemDate = new Date(dateStr);
+                        if (isNaN(itemDate.getTime())) return true;
+                        let diffDays = (now - itemDate) / (1000 * 60 * 60 * 24);
+                        return diffDays <= 10 && diffDays >= 0;
+                    });
+
+                    await Promise.all(recentItems.map(async (item) => {
+                        let id = item.id || item.news_id;
+                        if (id) {
+                            try {
+                                let detailRes = await fetch(`https://api.tibiadata.com/v4/news/id/${id}`);
+                                if (detailRes.ok) {
+                                    let detailData = await detailRes.json();
+                                    let newsObj = detailData.news || detailData.data?.news;
+                                    if (newsObj && (newsObj.content || newsObj.text || newsObj.message)) {
+                                        item._full_text = newsObj.content || newsObj.text || newsObj.message;
+                                    }
+                                }
+                            } catch(e) {}
+                        }
+                    }));
+
+                    return recentItems;
+                } catch(e) { return []; }
+            },
+            async fetchMainNewsArchive() {
+                try {
+                    let res = await fetch('https://api.tibiadata.com/v4/news/latest');
+                    if (!res.ok) return [];
+                    let data = await res.json();
+                    let items = data.news || data.data?.news || data.latest_news || data.data?.latest_news || [];
+                    if (!Array.isArray(items) && data.entries) items = data.entries;
+                    if (!Array.isArray(items)) items = [];
+
+                    if (items.length === 0) {
+                        let resArchive = await fetch('https://api.tibiadata.com/v4/news/archive');
+                        if (resArchive.ok) {
+                            let dataArch = await resArchive.json();
+                            items = dataArch.news || dataArch.data?.news || dataArch.archive || [];
+                        }
+                    }
+
+                    items = items.filter(i => {
+                        let type = (i.type || i.category || '').toLowerCase();
+                        return !type.includes('ticker');
+                    });
+
+                    return items.slice(0, 15);
+                } catch(e) { return []; }
+            },
+            async checkWorldOnline(charName, worldName) {
+                try {
+                    let res = await fetch(`https://api.tibiadata.com/v4/world/${encodeURIComponent(worldName)}`);
+                    if (!res.ok) return false;
+                    let data = await res.json();
+                    return (data.world?.online_players || []).some(p => p.name.toLowerCase() === charName.toLowerCase());
+                } catch(e) { return false; }
+            },
+            async fetchCharacter(name) {
+                try {
+                    let res = await fetch(`https://api.tibiadata.com/v4/character/${encodeURIComponent(name)}`);
+                    if (res.status === 404) return { notFound: true };
+                    if (!res.ok) return null;
+                    let data = await res.json();
+                    let c = data.character?.character;
+                    if (!c || !c.name) return { notFound: true };
+
+                    let online = (typeof c.status === 'string' && c.status.toLowerCase() === 'online') || (c.online === true || c.online === 'true');
+                    if (!online && c.world) online = await this.checkWorldOnline(c.name, c.world);
+                    
+                    let rawGuild = c.guild?.name || null;
+                    let guildName = rawGuild ? `Guild: ${rawGuild} (${c.guild.rank || ''})` : 'Sin Hermandad (Guild)';
+
+                    return {
+                        name: c.name, level: c.level, world: c.world, vocation: c.vocation,
+                        sex: c.sex || c.gender || 'male', status: online ? 'online' : 'offline',
+                        guild: guildName, guildRawName: rawGuild, residence: c.residence || 'Desconocida', deaths: data.character.deaths || []
+                    };
+                } catch(e) { return null; }
+            },
+            async fetchAllWorlds() {
+                try {
+                    let res = await fetch('https://api.tibiadata.com/v4/worlds');
+                    if (!res.ok) return [];
+                    let data = await res.json();
+                    return data.worlds?.regular_worlds || data.data?.worlds?.regular_worlds || data.worlds?.all_worlds || [];
+                } catch(e) { return []; }
+            },
+            async fetchWorldOnlinePlayers(worldName) {
+                try {
+                    let res = await fetch(`https://api.tibiadata.com/v4/world/${encodeURIComponent(worldName)}`);
+                    if (!res.ok) return null;
+                    return (await res.json()).world?.online_players || [];
+                } catch(e) { return null; }
+            }
+        };
+
+        function hasPromotion(vocation) {
+            let voc = (vocation || '').toLowerCase().trim();
+            return voc.includes('elite') || voc.includes('royal') || voc.includes('master') || voc.includes('elder') || voc.includes('exalted');
+        }
+
+        function escapeQuotes(str) {
+            return (str || '').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+        }
+
+        function getOutfitUrl(vocation, sex, isOnline, category) {
+            let voc = (vocation || '').toLowerCase();
+            let retroColors = 'head=78&body=68&legs=58&feet=95';
+
+            if (category === 'bots') {
+                if (voc.includes('monk')) {
+                    return isOnline 
+                        ? `https://outfit-images.ots.me/latest_walk/animoutfit.php?id=1824&addons=0&${retroColors}&direction=3`
+                        : `https://outfit-images.ots.me/latest/outfit.php?id=1824&addons=0&${retroColors}&direction=3`;
+                } else {
+                    let customColors = 'head=40&body=123&legs=123&feet=80';
+                    return isOnline 
+                        ? `https://outfit-images.ots.me/latest_walk/animoutfit.php?id=128&addons=0&${customColors}&direction=3`
+                        : `https://outfit-images.ots.me/latest/outfit.php?id=128&addons=0&${customColors}&direction=3`;
+                }
+            }
+
+            let female = (sex || '').toLowerCase().includes('female');
+            let type = '128';
+            let addons = hasPromotion(voc) ? '3' : '0';
+
+            if (voc.includes('monk')) {
+                type = '1824';
+            } else if (female) {
+                if (voc.includes('knight')) type = '139';
+                else if (voc.includes('paladin')) type = '137';
+                else if (voc.includes('sorcerer')) type = '130';
+                else if (voc.includes('druid')) type = '148';
+                else type = '136';
+            } else {
+                if (voc.includes('knight')) type = '131';
+                else if (voc.includes('paladin')) type = '129';
+                else if (voc.includes('sorcerer')) type = '130';
+                else if (voc.includes('druid')) type = '144';
+            }
+
+            return isOnline 
+                ? `https://outfit-images.ots.me/latest_walk/animoutfit.php?id=${type}&addons=${addons}&${retroColors}&direction=3`
+                : `https://outfit-images.ots.me/latest/outfit.php?id=${type}&addons=${addons}&${retroColors}&direction=3`;
+        }
+
+        const SAFE_FALLBACK_URL = "https://outfit-images.ots.me/latest/outfit.php?id=128&addons=0&head=78&body=68&legs=58&feet=95&direction=3";
+        const monsterUrlCache = {};
+        const MAX_CACHE_SIZE = 100;
+
+        function formatMonsterNameForWiki(name) {
+            const lowercaseWords = ['of', 'the', 'a', 'an', 'in', 'on', 'at', 'by', 'for', 'with', 'and'];
+            let clean = name.trim();
+            return clean.toLowerCase().split(/\s+/).map((word, index) => {
+                if (index > 0 && lowercaseWords.includes(word)) return word;
+                return word.charAt(0).toUpperCase() + word.slice(1);
+            }).join('_');
+        }
+
+        async function fetchFandomGifUrl(monsterName) {
+            if (!monsterName || monsterName === 'Cargando...') return SAFE_FALLBACK_URL;
+            let key = monsterName.toLowerCase().trim();
+            if (monsterUrlCache[key]) return monsterUrlCache[key];
+
+            let cleanName = monsterName.trim();
+            let baseName = formatMonsterNameForWiki(cleanName);
+            let capitalizedName = baseName.charAt(0).toUpperCase() + baseName.slice(1);
+            
+            let singularName = cleanName.endsWith('s') ? cleanName.slice(0, -1) : cleanName;
+            let baseSingular = formatMonsterNameForWiki(singularName);
+            let capitalizedSingular = baseSingular.charAt(0).toUpperCase() + baseSingular.slice(1);
+
+            let possibleTitles = [
+                `File:${capitalizedName}.gif`,
+                `File:${capitalizedSingular}.gif`,
+                `File:${capitalizedName}.png`,
+                `File:${capitalizedSingular}.png`,
+                `File:${cleanName}.gif`,
+                `File:${singularName}.gif`,
+                `File:${baseName}.gif`,
+                `File:${baseSingular}.gif`,
+                `File:${capitalizedName.replace(/_/g, '')}.gif`,
+                `File:${capitalizedSingular.replace(/_/g, '')}.gif`
+            ];
+
+            for (let title of possibleTitles) {
+                try {
+                    let res = await fetch(`https://tibia.fandom.com/api.php?action=query&titles=${encodeURIComponent(title)}&prop=imageinfo&iiprop=url&format=json&origin=*`);
+                    let data = await res.json();
+                    let pages = data.query?.pages;
+                    if (pages) {
+                        let pageId = Object.keys(pages)[0];
+                        if (pageId !== "-1" && pages[pageId].imageinfo?.[0]) {
+                            let url = pages[pageId].imageinfo[0].url;
+                            if (url) {
+                                if (Object.keys(monsterUrlCache).length >= MAX_CACHE_SIZE) {
+                                    let oldestKey = Object.keys(monsterUrlCache)[0];
+                                    delete monsterUrlCache[oldestKey];
+                                }
+                                return monsterUrlCache[key] = url;
+                            }
+                        }
+                    }
+                } catch (e) {}
+            }
+            return monsterUrlCache[key] = SAFE_FALLBACK_URL;
+        }
+
+        function extractMonsterName(reason) {
+            if (!reason) return '';
+            let match = reason.match(/by\s+(?:\b(?:a|an|the)\b\s+)?([a-zA-Z\s'-]+?)(?:\.|\s+and|\s+with|$)/i);
+            return (match && match[1]) ? match[1].trim() : '';
+        }
+
+        async function openCreatureWiki(monsterName, event) {
+            if (event) { event.preventDefault(); event.stopPropagation(); event.stopImmediatePropagation(); }
+            if (!monsterName || monsterName === 'Cargando...' || monsterName === 'No disponible') return;
+            
+            document.getElementById('wikiModalName').textContent = monsterName;
+            document.getElementById('wikiModalImg').src = SAFE_FALLBACK_URL;
+            document.getElementById('wikiModalBody').innerHTML = `<div style="text-align:center; color:#888; padding:15px;">⏳ Consultando datos completos en Tibia Fandom Wiki...</div>`;
+            openModal('creatureWikiModal');
+
+            fetchFandomGifUrl(monsterName).then(imgUrl => {
+                let imgEl = document.getElementById('wikiModalImg');
+                if (imgEl) imgEl.src = imgUrl || SAFE_FALLBACK_URL;
+            });
+
+            loadCreatureWikiDataContent(monsterName, 'wikiModalBody');
+        }
+
+        async function loadCreatureInline(monsterName) {
+            let container = document.getElementById('creatureInlineResult');
+            if (!container) return;
+
+            container.style.display = 'block';
+            container.innerHTML = `
+                <div class="wiki-header">
+                    <img id="inlineWikiImg" class="wiki-img" src="${SAFE_FALLBACK_URL}" alt="Criatura" onerror="this.onerror=null; this.src=SAFE_FALLBACK_URL;">
+                    <div style="overflow:hidden;">
+                        <div class="wiki-stat-label">Tibia Fandom Wiki</div>
+                        <div id="inlineWikiName" style="font-size:13px; font-weight:bold; color:#3498db;">${monsterName}</div>
+                    </div>
+                </div>
+                <div id="inlineWikiBody" style="display:flex; flex-direction:column; gap:6px; max-height:60vh; overflow-y:auto; padding-right:2px;">
+                    <div style="text-align:center; color:#888; padding:15px;">⏳ Consultando datos completos en Tibia Fandom Wiki...</div>
+                </div>
+            `;
+
+            fetchFandomGifUrl(monsterName).then(imgUrl => {
+                let imgEl = document.getElementById('inlineWikiImg');
+                if (imgEl) imgEl.src = imgUrl || SAFE_FALLBACK_URL;
+            });
+
+            loadCreatureWikiDataContent(monsterName, 'inlineWikiBody');
+        }
+
+        function cleanAndFormatItemName(rawName) {
+            if (!rawName) return '';
+            let cleaned = rawName
+                .replace(/(?:common|uncommon|semirare|rare|very rare|lethal)/gi, '')
+                .replace(/[\d\s\-–—]+(?:gp|gold coins?|platinum coins?|crystal coins?)?/gi, '')
+                .replace(/['"|]/g, '')
+                .trim();
+            let spaced = cleaned.replace(/([a-z])([A-Z])/g, '$1 $2');
+            return spaced.trim();
+        }
+
+        async function loadCreatureWikiDataContent(monsterName, targetBodyId) {
+            const bodyEl = document.getElementById(targetBodyId);
+            if (!bodyEl) return;
+
+            try {
+                let baseWikiTitle = formatMonsterNameForWiki(monsterName);
+                baseWikiTitle = baseWikiTitle.charAt(0).toUpperCase() + baseWikiTitle.slice(1);
+
+                let hp = 'N/D', exp = 'N/D', speed = 'N/D', armor = 'N/D', seeInvis = 'No ❌', walkField = 'Ninguno', locations = 'Desconocida', lootList = 'Sin información de botín.';
+                let elements = { physical: '100%', earth: '100%', fire: '100%', ice: '100%', energy: '100%', holy: '100%', death: '100%' };
+                let foundValidMonster = false;
+
+                try {
+                    let sRes = await fetch(`https://tibia.fandom.com/api.php?action=query&list=search&srsearch=${encodeURIComponent(monsterName)}&format=json&origin=*`);
+                    let sData = await sRes.json();
+                    let searchResults = sData.query?.search || [];
+                    let bestTitle = searchResults.find(item => !item.title.toLowerCase().startsWith('user:'))?.title || baseWikiTitle;
+
+                    let pRes = await fetch(`https://tibia.fandom.com/api.php?action=parse&page=${encodeURIComponent(bestTitle)}&prop=text|wikitext&format=json&origin=*`);
+                    let pData = await pRes.json();
+
+                    if (pData?.parse) {
+                        let wt = pData.parse.wikitext?.['*'] || '';
+                        let htmlText = pData.parse.text?.['*'] || '';
+
+                        let hpMatch = wt.match(/\|\s*(?:hitpoints|hp)\s*=\s*([0-9,.]+)/i);
+                        if (hpMatch) hp = hpMatch[1];
+
+                        let expMatch = wt.match(/\|\s*(?:experience|exp)\s*=\s*([0-9,.]+)/i);
+                        if (expMatch) exp = expMatch[1];
+
+                        let speedMatch = wt.match(/\|\s*speed\s*=\s*([0-9,.]+)/i);
+                        if (speedMatch) speed = speedMatch[1];
+
+                        let armorMatch = wt.match(/\|\s*armor\s*=\s*([0-9,.]+)/i);
+                        if (armorMatch) armor = armorMatch[1];
+
+                        let invM = wt.match(/\|\s*senseinvis\s*=\s*([^\n|]+)/i);
+                        if (invM) {
+                            let val = invM[1].toLowerCase();
+                            seeInvis = (val.includes('yes') || val.includes('true') || val.includes('1')) ? 'Sí 👁️' : 'No ❌';
+                        }
+
+                        let walkM = wt.match(/\|\s*walksaround\s*=\s*([^\n|]+)/i);
+                        if (walkM) walkField = walkM[1].replace(/\[\[|\]\]/g, '').trim();
+
+                        const parseElem = (key, regex) => {
+                            let m = wt.match(regex);
+                            if (m) { let val = parseInt(m[1], 10); if (!isNaN(val)) elements[key] = val + '%'; }
+                        };
+                        parseElem('physical', /\|\s*physicalDmgMod\s*=\s*([0-9]+)/i);
+                        parseElem('earth', /\|\s*earthDmgMod\s*=\s*([0-9]+)/i);
+                        parseElem('fire', /\|\s*fireDmgMod\s*=\s*([0-9]+)/i);
+                        parseElem('ice', /\|\s*iceDmgMod\s*=\s*([0-9]+)/i);
+                        parseElem('energy', /\|\s*energyDmgMod\s*=\s*([0-9]+)/i);
+                        parseElem('holy', /\|\s*holyDmgMod\s*=\s*([0-9]+)/i);
+                        parseElem('death', /\|\s*deathDmgMod\s*=\s*([0-9]+)/i);
+
+                        let locM = wt.match(/\|\s*location\s*=\s*([^\n|]+)/i);
+                        if (locM) locations = locM[1].replace(/\[\[|\]\]/g, '').trim();
+
+                        let itemsFound = [];
+                        let lootMatches = [...wt.matchAll(/\{\{\s*LootItem\s*\|\s*([^|}]+)(?:\|[^}]*)?\}\}/gi)];
+                        if (lootMatches.length > 0) {
+                            lootMatches.forEach(m => {
+                                let formatted = cleanAndFormatItemName(m[1]);
+                                if (formatted && formatted.length > 1 && !itemsFound.includes(formatted)) itemsFound.push(formatted);
+                            });
+                        }
+
+                        if (itemsFound.length === 0) {
+                            let lootParamMatch = wt.match(/\|\s*loot\s*=\s*([\s\S]*?)(?=\n\||\n\}\}|$)/i);
+                            if (lootParamMatch) {
+                                let rawLootText = lootParamMatch[1]
+                                    .replace(/\{\{[\s\S]*?\}\}/g, (match) => {
+                                        let parts = match.replace(/\{\{|\}\}/g, '').split('|');
+                                        return parts.length > 1 ? parts[1].trim() : parts[0].trim();
+                                    })
+                                    .replace(/\[\[(?:[^|\]]*\|)?([^\]]+)\]\]/g, '$1')
+                                    .replace(/LootTable|LootItem/gi, '');
+
+                                rawLootText.split(/,|\n|<br\s*\/?>/).forEach(piece => {
+                                    let formatted = cleanAndFormatItemName(piece);
+                                    if (formatted && formatted.length > 1 && !itemsFound.includes(formatted)) itemsFound.push(formatted);
+                                });
+                            }
+                        }
+
+                        if (itemsFound.length > 0) lootList = itemsFound.join(' • ');
+                        if (hp !== 'N/D' || exp !== 'N/D' || locations !== 'Desconocida') foundValidMonster = true;
+                    }
+                } catch (err) {}
+
+                if (!foundValidMonster && hp === 'N/D' && exp === 'N/D') {
+                    bodyEl.innerHTML = `<div style="text-align:center; color:#ff8787; padding:15px;">❌ No se encontró información detallada de criatura para "${monsterName}".</div>`;
+                    return;
+                }
+
+                const getElemClassAndStyle = (valStr) => {
+                    let num = parseInt(valStr, 10);
+                    if (isNaN(num) || num === 100) return 'elem-neutral';
+                    return num > 100 ? 'elem-strong' : 'elem-weak';
+                };
+
+                bodyEl.innerHTML = `
+                    <div class="wiki-section-title">📊 Estadísticas Principales</div>
+                    <div class="wiki-info-grid">
+                        <div class="wiki-stat-item"><span class="wiki-stat-label">❤️ Hit Points (Vida)</span><span class="wiki-stat-val">${hp}</span></div>
+                        <div class="wiki-stat-item"><span class="wiki-stat-label">✨ Experiencia</span><span class="wiki-stat-val">${exp}</span></div>
+                        <div class="wiki-stat-item"><span class="wiki-stat-label">⚡ Velocidad</span><span class="wiki-stat-val">${speed}</span></div>
+                        <div class="wiki-stat-item"><span class="wiki-stat-label">🛡️ Armadura</span><span class="wiki-stat-val">${armor}</span></div>
+                    </div>
+                    <div class="wiki-section-title">⚡ Daño Recibido</div>
+                    <div class="elements-grid">
+                        <div class="elem-box"><span class="wiki-stat-label">⚔️ Físico</span><span class="${getElemClassAndStyle(elements.physical)}">${elements.physical}</span></div>
+                        <div class="elem-box"><span class="wiki-stat-label">🔥 Fuego</span><span class="${getElemClassAndStyle(elements.fire)}">${elements.fire}</span></div>
+                        <div class="elem-box"><span class="wiki-stat-label">❄️ Hielo</span><span class="${getElemClassAndStyle(elements.ice)}">${elements.ice}</span></div>
+                        <div class="elem-box"><span class="wiki-stat-label">⚡ Energía</span><span class="${getElemClassAndStyle(elements.energy)}">${elements.energy}</span></div>
+                        <div class="elem-box"><span class="wiki-stat-label">🌿 Earth</span><span class="${getElemClassAndStyle(elements.earth)}">${elements.earth}</span></div>
+                        <div class="elem-box"><span class="wiki-stat-label">☀️ Holy</span><span class="${getElemClassAndStyle(elements.holy)}">${elements.holy}</span></div>
+                    </div>
+                    <div class="wiki-section-title">👁️ Habilidades y Campos</div>
+                    <div class="wiki-info-grid">
+                        <div class="wiki-stat-item"><span class="wiki-stat-label">Ve Invisibilidad</span><span class="wiki-stat-val">${seeInvis}</span></div>
+                        <div class="wiki-stat-item"><span class="wiki-stat-label">Atraviesa Elementos</span><span class="wiki-stat-val" style="color:var(--accent-secondary);">${walkField}</span></div>
+                    </div>
+                    <div class="wiki-section-title">📍 Hábitat y Localizaciones</div>
+                    <div class="wiki-full-row"><span class="wiki-stat-val" style="color:#3498db;">${locations}</span></div>
+                    <div class="wiki-section-title">💰 Botín / Loot de la Criatura</div>
+                    <div class="loot-box-container">${lootList}</div>
+                    <div style="font-size:9px; color:#888; text-align:center; margin-top:2px;">Datos extraídos de Tibia Fandom Wiki</div>
+                `;
+            } catch (e) {
+                bodyEl.innerHTML = `<div style="text-align:center; color:#ff8787; padding:15px;">Error al conectar con los servidores de Tibia Fandom Wiki.</div>`;
+            }
+        }
+
+        function loadRashidInfo() {
+            const rashidSchedule = [
+                { day: 'Domingo', city: 'Carlin' },
+                { day: 'Lunes', city: 'Svargrond' },
+                { day: 'Martes', city: 'Liberty Bay' },
+                { day: 'Miércoles', city: 'Port Hope' },
+                { day: 'Jueves', city: 'Ankrahmun' },
+                { day: 'Viernes', city: 'Darashia' },
+                { day: 'Sábado', city: 'Edron' }
+            ];
+            let todayRashid = rashidSchedule[new Date().getDay()];
+            let locEl = document.getElementById('rashidLocation');
+            if (locEl) locEl.textContent = todayRashid.city;
+        }
+
+        async function loadTopBarSprites() {
+            fetchFandomGifUrl('Ferumbras').then(url => {
+                let img = document.getElementById('bestiaryIconImg');
+                if (img) img.src = url;
+            });
+            fetchFandomGifUrl('Squeezing Gear of Girlpower').then(url => {
+                let img = document.getElementById('toolsIconImg');
+                if (img) img.src = url;
+            });
+        }
+
+        function formatTimeAgo(dateInput) {
+            if (!dateInput) return '';
+            let deathDate = new Date(dateInput);
+            if (isNaN(deathDate.getTime())) return dateInput;
+            let diffMs = new Date() - deathDate;
+            let diffMins = Math.floor(diffMs / 60000);
+            let diffHours = Math.floor(diffMs / 3600000);
+            let diffDays = Math.floor(diffMs / 86400000);
+
+            if (diffMins < 1) return 'hace un momento';
+            if (diffMins < 60) return `hace ${diffMins} ${diffMins === 1 ? 'minuto' : 'minutos'}`;
+            if (diffHours < 24) return `hace ${diffHours} ${diffHours === 1 ? 'hora' : 'horas'}`;
+            return `hace ${diffDays} ${diffDays === 1 ? 'día' : 'días'}`;
+        }
+
+        const knownMonsters = [
+            'hand of cursed fate', 'dark torturer', 'breach brood', 'dread intruder', 'sparkion', 
+            'demon', 'dragon', 'behemoth', 'hydra', 'juggernaut', 'plaguesmith', 'grim reaper', 
+            'acolyte of the cult', 'orc', 'rat', 'spider', 'skeleton', 'ghoul', 'dragon lord',
+            'giant spider', 'necromancer', 'warlock', 'bog raider', 'nightmare', 'destroyer', 'hellhound', 'toad'
+        ];
+
+        function formatDeath(reason) {
+            if (!reason) return '';
+            let byIdx = reason.indexOf(' by ');
+            if (byIdx === -1) return reason;
+            let prefix = reason.substring(0, byIdx + 4);
+            let killersPart = reason.substring(byIdx + 4).trim();
+            let hasDot = killersPart.endsWith('.');
+            if (hasDot) killersPart = killersPart.slice(0, -1);
+            let processedKillers = killersPart;
+
+            killersPart.split(/,\s+|\s+and\s+/).forEach(token => {
+                let name = token.trim();
+                let cleanCheck = name.replace(/^(a|an|the)\s+/i, '').toLowerCase();
+                if (!knownMonsters.includes(cleanCheck) && name.length > 1) {
+                    let safeName = escapeQuotes(name);
+                    processedKillers = processedKillers.replace(new RegExp(`\\b${name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'g'), `<span class="clickable-player" onclick="searchPlayer('${safeName}')">${name}</span>`);
+                }
+            });
+            return prefix + processedKillers + (hasDot ? '.' : '');
+        }
+
+        let currentCategory = 'bots';
+        let tempChar = null;
+
+        const CharacterManager = {
+            async search(specificName = null) {
+                let val = specificName || document.getElementById('searchInput').value.trim();
+                let box = document.getElementById('searchResult');
+                if (!val) return;
+                if (document.activeElement) document.activeElement.blur();
+                
+                let isScrolledDown = window.scrollY > 180;
+                box.className = isScrolledDown ? 'search-result floating' : 'search-result';
+                box.style.display = 'block';
+                box.innerHTML = `<button class="search-close-btn" onclick="CharacterManager.clearSearch()" title="Cerrar">✕</button>⏳ Consultando a Tibia...`;
+                
+                let res = await TibiaAPI.fetchCharacter(val);
+                if (res?.notFound) {
+                    box.className += ' error';
+                    box.innerHTML = `<button class="search-close-btn" onclick="CharacterManager.clearSearch()" title="Cerrar">✕</button>❌ Personaje <b>"${val}"</b> no encontrado o eliminado.`;
+                    tempChar = null; return;
+                }
+                tempChar = res;
+                if (!tempChar) {
+                    box.className += ' error';
+                    box.innerHTML = `<button class="search-close-btn" onclick="CharacterManager.clearSearch()" title="Cerrar">✕</button>⚠️ Error de conexión al buscar a <b>"${val}"</b>.`;
+                    return;
+                }
+                UIComponents.renderSearchResult();
+            },
+            clearSearch() {
+                let box = document.getElementById('searchResult'), inputEl = document.getElementById('searchInput');
+                if (box) { box.style.display = 'none'; box.innerHTML = ''; box.className = 'search-result'; }
+                if (inputEl) inputEl.value = '';
+                tempChar = null;
+            },
+            saveToCategory(category) {
+                if (!tempChar) return;
+                if (!favorites.some(f => f.name.toLowerCase() === tempChar.name.toLowerCase())) {
+                    tempChar.category = category;
+                    tempChar.note = '';
+                    favorites.push(tempChar);
+                    AppStorage.save();
+                    AppNavigation.switchCategory(category);
+                    UIComponents.renderSearchResult();
+                }
+            },
+            remove(name) {
+                favorites = favorites.filter(f => f.name.toLowerCase() !== name.toLowerCase());
+                AppStorage.save(); UIComponents.renderFavs();
+                if (tempChar && tempChar.name.toLowerCase() === name.toLowerCase()) UIComponents.renderSearchResult();
+            },
+            async updateAll() {
+                if (currentCategory === 'worlds') {
+                    if (viewingWorldDetails) UIComponents.renderWorldPlayers(viewingWorldDetails, true);
+                    else { cachedWorlds = null; UIComponents.renderWorlds(); }
+                    return;
+                }
+                if (currentCategory === 'news') {
+                    cachedNewsTickers = null;
+                    UIComponents.renderNewsTickers();
+                    return;
+                }
+                if (currentCategory === 'mainnews') {
+                    cachedMainNews = null;
+                    UIComponents.renderMainNews();
+                    return;
+                }
+                if (currentCategory === 'creatures' || currentCategory === 'tools' || currentCategory === 'theme') return;
+
+                if (favorites.length === 0) return;
+                const btn = document.getElementById('btnUpdateFavs'), alertBox = document.getElementById('updateAlert');
+                alertBox.style.display = 'none'; alertBox.innerHTML = '';
+                if (btn) btn.disabled = true;
+
+                let totalFavs = favorites.length, processedCount = 0;
+                for (let i = 0; i < totalFavs; i += 8) {
+                    const batch = favorites.slice(i, i + 8);
+                    if (btn) btn.textContent = `⏳ ${processedCount}/${totalFavs}`;
+
+                    await Promise.all(batch.map(async (f) => {
+                        let updated = await TibiaAPI.fetchCharacter(f.name);
+                        processedCount++;
+                        if (updated && !updated.notFound) {
+                            updated.category = f.category;
+                            updated.note = f.note || '';
+                            let oldLevel = parseInt(f.level, 10), newLevel = parseInt(updated.level, 10);
+                            if (!isNaN(oldLevel) && !isNaN(newLevel) && newLevel > oldLevel) {
+                                NotificationManager.add('level', f.name, NOTIF_TEXTS.levelMsg(newLevel));
+                                triggerLiveToast('level', `🎉 NIVEL: ${f.name}`, `Avanzó al Nivel ${newLevel}`);
+                            }
+                            let oldDeaths = f.deaths || [], newDeaths = updated.deaths || [];
+                            if (newDeaths.length > 0 && !oldDeaths.some(d => d.time === newDeaths[0].time)) {
+                                NotificationManager.add('death', f.name, formatDeath(newDeaths[0].reason));
+                                triggerLiveToast('death', `☠️ MUERTE: ${f.name}`, `Cayó en combate.`);
+                            }
+                            Object.assign(f, updated);
+                            if (tempChar && tempChar.name.toLowerCase() === f.name.toLowerCase()) tempChar = Object.assign({}, f);
+                        } else if (updated?.notFound) {
+                            if (!notifications.some(n => n.type === 'deleted' && n.title.includes(f.name))) {
+                                NotificationManager.add('deleted', f.name, NOTIF_TEXTS.deletedMsg);
+                                triggerLiveToast('deleted', `⚠️ ESTADO: ${f.name}`, 'Personaje baneado o eliminado.');
+                            }
+                            f.status = 'deleted';
+                            if (tempChar && tempChar.name.toLowerCase() === f.name.toLowerCase()) tempChar.status = 'deleted';
+                        }
+                    }));
+                    if (i + 8 < totalFavs) await new Promise(resolve => setTimeout(resolve, 600));
+                }
+
+                AppStorage.save();
+                if (currentCategory === 'notifications') UIComponents.renderNotifications();
+                else UIComponents.renderFavs();
+                if (tempChar) UIComponents.renderSearchResult();
+                if (btn) { btn.disabled = false; btn.textContent = '🔄'; }
+            },
+            mergeList(newList) {
+                newList.forEach(item => {
+                    let name = typeof item === 'string' ? item : item.name;
+                    let category = typeof item === 'object' && item.category ? item.category : 'bots';
+                    let note = typeof item === 'object' && item.note ? item.note : '';
+                    if (!name) return;
+                    let existingIndex = favorites.findIndex(f => f.name.toLowerCase() === name.toLowerCase());
+                    if (existingIndex !== -1) {
+                        favorites[existingIndex].category = category;
+                        if (note) favorites[existingIndex].note = note;
+                    } else {
+                        favorites.push({ name, category, note, level: '...', world: '...', vocation: '...', sex: 'male', status: 'offline', guild: '...', residence: 'Desconocida', deaths: [] });
+                    }
+                });
+                AppStorage.save(); UIComponents.renderFavs(); this.updateAll();
+            }
+        };
+
+        const AppNavigation = {
+            switchCategory(cat) {
+                currentCategory = cat; viewingWorldDetails = null; currentWorldPlayersCache = [];
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                document.getElementById(`tab-${cat}`)?.classList.add('active');
+
+                document.getElementById('currentListTitle').textContent = {
+                    bots: '🤖 Lista de Bots', enemies: '⚔️ Enemigos', friends: '🛡️ Amigos', worlds: '🌍 Servidores', news: '📢 News Ticker', mainnews: '📰 News', notifications: '🔔 Historial de Notificaciones', creatures: '🐲 Bestiario', tools: '🛠️ Herramientas', theme: '🎨 Personalizar Apariencia'
+                }[cat];
+
+                let isNormalFavCategory = (cat === 'bots' || cat === 'enemies' || cat === 'friends');
+                document.getElementById('filterRow').style.display = isNormalFavCategory ? 'flex' : 'none';
+                
+                // Selector de mundos (Open PvP vs Optional PvP)
+                let worldFilterRow = document.getElementById('worldFilterRow');
+                if (worldFilterRow) {
+                    worldFilterRow.style.display = (cat === 'worlds' && !viewingWorldDetails) ? 'flex' : 'none';
+                }
+
+                let updateBtn = document.getElementById('btnUpdateFavs');
+                let compactToggle = document.getElementById('btnCompactToggle');
+                
+                if (cat === 'creatures' || cat === 'tools' || cat === 'theme') {
+                    if (updateBtn) updateBtn.style.display = 'none';
+                    if (compactToggle) compactToggle.style.display = 'none';
+                } else if (cat === 'worlds') {
+                    if (updateBtn) updateBtn.style.display = 'block';
+                    if (compactToggle) compactToggle.style.display = 'none';
+                } else {
+                    if (updateBtn) updateBtn.style.display = 'block';
+                    if (compactToggle) compactToggle.style.display = 'block';
+                }
+
+                if (cat === 'notifications') { NotificationManager.markAllAsRead(); UIComponents.renderNotifications(); }
+                else if (cat === 'worlds') UIComponents.renderWorlds();
+                else if (cat === 'news') UIComponents.renderNewsTickers();
+                else if (cat === 'mainnews') UIComponents.renderMainNews();
+                else if (cat === 'creatures') UIComponents.renderCreatureSearchTab();
+                else if (cat === 'tools') UIComponents.renderToolsTab();
+                else if (cat === 'theme') UIComponents.renderThemeTab();
+                else UIComponents.renderFavs();
+            },
+            setFilter(status) {
+                currentFilterStatus = status;
+                document.querySelectorAll('#filterRow .filter-btn').forEach(btn => btn.classList.remove('active'));
+                document.getElementById(`filter-${status}`).classList.add('active');
+                UIComponents.renderFavs();
+            },
+            openNotificationsAndHideAlert() {
+                let alertBox = document.getElementById('updateAlert');
+                if (alertBox) { alertBox.style.display = 'none'; alertBox.innerHTML = ''; }
+                this.switchCategory('notifications');
+            }
+        };
+
+        function setWorldTypeFilter(type) {
+            currentWorldType = type;
+            document.querySelectorAll('#worldFilterRow .filter-btn').forEach(btn => btn.classList.remove('active'));
+            let activeBtn = document.getElementById(`world-filter-${type}`);
+            if (activeBtn) activeBtn.classList.add('active');
+            UIComponents.renderWorlds();
+        }
+
+        const UIComponents = {
+            updateNotiBadge() {
+                let badge = document.getElementById('notiBadgeTop'), unreadCount = notifications.filter(n => !n.read).length;
+                if (unreadCount > 0) { badge.textContent = unreadCount; badge.style.display = 'inline-block'; }
+                else badge.style.display = 'none';
+            },
+            async loadBoostedContent() {
+                let data = await TibiaAPI.fetchBoostedData();
+                let cName = data?.creature?.name || 'Ancient Scarab';
+                let bName = data?.boss?.name || 'Mazoran';
+
+                document.getElementById('boostedName').textContent = cName;
+                document.getElementById('boostedBossName').textContent = bName;
+
+                fetchFandomGifUrl(cName).then(url => {
+                    let img = document.getElementById('boostedImg');
+                    if (img) img.src = url;
+                });
+                fetchFandomGifUrl(bName).then(url => {
+                    let img = document.getElementById('boostedBossImg');
+                    if (img) img.src = url;
+                });
+            },
+            async loadTickerHeader() {
+                if (!cachedNewsTickers) cachedNewsTickers = await TibiaAPI.fetchNewsTickers();
+                let tickerEl = document.getElementById('tickerLatestText');
+                let tickerCardEl = document.getElementById('tickerCard');
+                if (tickerEl) {
+                    if (cachedNewsTickers.length > 0) {
+                        let latest = cachedNewsTickers[0];
+                        let latestText = latest.text || latest.message || latest.content || latest._full_text || 'Ver aviso reciente';
+                        tickerEl.textContent = latestText;
+                        
+                        let latestId = String(latest.id || latest.news_id || latest.date || latestText.substring(0, 20)).trim();
+                        let lastReadTickerId = localStorage.getItem(READ_TICKER_KEY);
+                        
+                        if (latestId && latestId !== lastReadTickerId) {
+                            if (tickerCardEl) tickerCardEl.classList.add('highlighted');
+                        } else {
+                            if (tickerCardEl) tickerCardEl.classList.remove('highlighted');
+                        }
+                    } else {
+                        tickerEl.textContent = 'No hay avisos recientes.';
+                        if (tickerCardEl) tickerCardEl.classList.remove('highlighted');
+                    }
+                }
+
+                if (!cachedMainNews) cachedMainNews = await TibiaAPI.fetchMainNewsArchive();
+                let mainNewsEl = document.getElementById('mainNewsLatestText');
+                let mainNewsCardEl = document.getElementById('mainNewsCard');
+                if (mainNewsEl) {
+                    if (cachedMainNews.length > 0) {
+                        let latestMain = cachedMainNews[0];
+                        let latestMainTitle = latestMain.news || latestMain.title || latestMain.headline || latestMain.subject || 'Ver artículos oficiales';
+                        mainNewsEl.textContent = latestMainTitle;
+                        
+                        let latestMainId = String(latestMain.id || latestMain.news_id || latestMain.date || latestMainTitle.substring(0, 20)).trim();
+                        let lastReadMainId = localStorage.getItem(READ_MAINNEWS_KEY);
+                        
+                        if (latestMainId && latestMainId !== lastReadMainId) {
+                            if (mainNewsCardEl) mainNewsCardEl.classList.add('highlighted');
+                        } else {
+                            if (mainNewsCardEl) mainNewsCardEl.classList.remove('highlighted');
+                        }
+                    } else {
+                        mainNewsEl.textContent = 'No hay noticias recientes.';
+                        if (mainNewsCardEl) mainNewsCardEl.classList.remove('highlighted');
+                    }
+                }
+            },
+            renderThemeTab() {
+                let container = document.getElementById('favList');
+                
+                let presetsHtml = Object.keys(PRESET_THEMES).map(key => {
+                    let p = PRESET_THEMES[key];
+                    let isActive = currentThemeConfig.primary === p.primary && currentThemeConfig.bgBody === p.bgBody;
+                    return `
+                        <div class="theme-preset-card ${isActive ? 'active' : ''}" onclick="ThemeManager.setPreset('${key}')">
+                            <span class="theme-label">${p.name}</span>
+                            <div class="theme-preview-dots">
+                                <div class="dot" style="background:${p.primary}"></div>
+                                <div class="dot" style="background:${p.secondary}"></div>
+                                <div class="dot" style="background:${p.bgCard}"></div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                container.innerHTML = `
+                    <div style="margin-bottom:8px;"><button class="btn-action" onclick="AppNavigation.switchCategory('bots')">⬅ Volver</button></div>
+                    
+                    <div class="theme-section">
+                        <div style="font-weight:bold; font-size:11px; color:var(--accent-primary);">🎨 Temas y Estilos Predeterminados (24 Opciones)</div>
+                        <div class="theme-grid">${presetsHtml}</div>
+                    </div>
+
+                    <div class="theme-section">
+                        <div style="font-weight:bold; font-size:11px; color:var(--accent-primary);">✨ Efecto Neón y Transparencias</div>
+                        <div class="custom-color-row">
+                            <span>Activar resplandor en bordes y tarjetas:</span>
+                            <input type="checkbox" ${currentThemeConfig.neonEnabled ? 'checked' : ''} onchange="ThemeManager.toggleNeon(this.checked)" style="width: 18px; height: 18px; accent-color: var(--accent-primary); cursor: pointer;">
+                        </div>
+                        <div class="custom-color-row">
+                            <span>Intensidad del Brillo Neón:</span>
+                            <select onchange="ThemeManager.updateCustom('neonIntensity', this.value); ThemeManager.applyStyle();" style="background:var(--bg-body); color:#fff; border:1px solid #444; border-radius:4px; padding:2px 4px; font-size:10px;">
+                                <option value="2px" ${currentThemeConfig.neonIntensity === '2px' ? 'selected' : ''}>Ultra pequeño (2px)</option>
+                                <option value="3px" ${currentThemeConfig.neonIntensity === '3px' || !currentThemeConfig.neonIntensity ? 'selected' : ''}>Muy pequeño (3px)</option>
+                                <option value="5px" ${currentThemeConfig.neonIntensity === '5px' ? 'selected' : ''}>Pequeño (5px)</option>
+                                <option value="10px" ${currentThemeConfig.neonIntensity === '10px' ? 'selected' : ''}>Normal (10px)</option>
+                                <option value="18px" ${currentThemeConfig.neonIntensity === '18px' ? 'selected' : ''}>Intenso (18px)</option>
+                                <option value="25px" ${currentThemeConfig.neonIntensity === '25px' ? 'selected' : ''}>Cyberpunk Extremo (25px)</option>
+                            </select>
+                        </div>
+                        <div class="custom-color-row">
+                            <span>Opacidad de las Tarjetas:</span>
+                            <select onchange="ThemeManager.updateCustom('cardOpacity', this.value); ThemeManager.applyStyle();" style="background:var(--bg-body); color:#fff; border:1px solid #444; border-radius:4px; padding:2px 4px; font-size:10px;">
+                                <option value="1" ${currentThemeConfig.cardOpacity === '1' || !currentThemeConfig.cardOpacity ? 'selected' : ''}>Sólido (100%)</option>
+                                <option value="0.9" ${currentThemeConfig.cardOpacity === '0.9' ? 'selected' : ''}>Ligeramente translúcido (90%)</option>
+                                <option value="0.8" ${currentThemeConfig.cardOpacity === '0.8' ? 'selected' : ''}>Translúcido (80%)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="theme-section">
+                        <div style="font-weight:bold; font-size:11px; color:var(--accent-primary);">📱 Bordes y Tamaño de Fuente</div>
+                        
+                        <div class="custom-color-row">
+                            <span>Redondeo de bordes:</span>
+                            <select onchange="ThemeManager.updateCustom('borderRadius', this.value)" style="background:var(--bg-body); color:#fff; border:1px solid #444; border-radius:4px; padding:2px 4px; font-size:10px;">
+                                <option value="0px" ${currentThemeConfig.borderRadius === '0px' ? 'selected' : ''}>Recto (Classic)</option>
+                                <option value="6px" ${currentThemeConfig.borderRadius === '6px' ? 'selected' : ''}>Suave (Normal)</option>
+                                <option value="12px" ${currentThemeConfig.borderRadius === '12px' ? 'selected' : ''}>Redondeado (Moderno)</option>
+                            </select>
+                        </div>
+
+                        <div class="custom-color-row">
+                            <span>Tamaño de fuente:</span>
+                            <select onchange="ThemeManager.updateCustom('fontScale', this.value)" style="background:var(--bg-body); color:#fff; border:1px solid #444; border-radius:4px; padding:2px 4px; font-size:10px;">
+                                <option value="11px" ${currentThemeConfig.fontScale === '11px' ? 'selected' : ''}>Compacto</option>
+                                <option value="12px" ${currentThemeConfig.fontScale === '12px' ? 'selected' : ''}>Normal</option>
+                                <option value="13px" ${currentThemeConfig.fontScale === '13px' ? 'selected' : ''}>Grande</option>
+                            </select>
+                        </div>
+                    </div>
+                `;
+            },
+            async renderCreatureSearchTab() {
+                let container = document.getElementById('favList');
+                container.innerHTML = `
+                    <div style="margin-bottom:8px;"><button class="btn-action" onclick="AppNavigation.switchCategory('bots')">⬅ Volver</button></div>
+                    <div class="search-card" style="margin-bottom: 8px;">
+                        <div class="search-row">
+                            <input type="text" id="creatureSearchInput" placeholder="Escribe criatura o boss (Ej: Demon)..." oninput="handleTibiaDataCreatureInput(event)" onkeypress="handleCreatureSearchKey(event)">
+                            <button onclick="executeCreatureSearch()" style="background:#3498db; color:#fff;">Buscar</button>
+                        </div>
+                        <div id="creatureSuggestions" class="creature-suggestions-box"></div>
+                    </div>
+                    <div id="creatureInlineResult" class="inline-creature-result" style="display:none;"></div>
+                `;
+            },
+            renderToolsTab() {
+                let container = document.getElementById('favList');
+                container.innerHTML = `
+                    <div style="margin-bottom:8px;"><button class="btn-action" onclick="AppNavigation.switchCategory('bots')">⬅ Volver</button></div>
+                    <div class="tools-grid">
+                        <a href="https://tibiamaps.io/map" target="_blank" class="tool-card">
+                            <span class="tool-title">🗺️ TibiaMaps.io</span>
+                            <span class="tool-desc">Mapas interactivos de Tibia.</span>
+                        </a>
+                        <a href="https://exevopan.com/" target="_blank" class="tool-card">
+                            <span class="tool-title">⏱️ Exevo Pan</span>
+                            <span class="tool-desc">Rotaciones de Bosses y Highscores.</span>
+                        </a>
+                        <a href="https://guildstats.eu/" target="_blank" class="tool-card">
+                            <span class="tool-title">📊 GuildStats</span>
+                            <span class="tool-desc">Estadísticas avanzadas y rankings.</span>
+                        </a>
+                        <a href="https://www.tibiaring.com/" target="_blank" class="tool-card">
+                            <span class="tool-title">🤖 TibiaRing</span>
+                            <span class="tool-desc">Baneos, bots y analíticas de mundos.</span>
+                        </a>
+                        <a href="https://www.tibia.com/" target="_blank" class="tool-card">
+                            <span class="tool-title">🌐 Tibia.com</span>
+                            <span class="tool-desc">Página oficial del juego.</span>
+                        </a>
+                    </div>
+                `;
+            },
+            async renderNewsTickers() {
+                let container = document.getElementById('favList');
+                container.innerHTML = `<div style="margin-bottom:8px;"><button class="btn-action" onclick="AppNavigation.switchCategory('bots')">⬅ Volver</button></div><div class="empty-msg">⏳ Cargando News Ticker completo...</div>`;
+                document.getElementById('currentListTitle').textContent = '📢 News Ticker';
+
+                if (!cachedNewsTickers) cachedNewsTickers = await TibiaAPI.fetchNewsTickers();
+                if (!cachedNewsTickers || cachedNewsTickers.length === 0) {
+                    container.innerHTML = `<div style="margin-bottom:8px;"><button class="btn-action" onclick="AppNavigation.switchCategory('bots')">⬅ Volver</button></div><div class="empty-msg">No se pudieron cargar los avisos recientes.</div>`;
+                    return;
+                }
+
+                container.innerHTML = `<div style="margin-bottom:8px;"><button class="btn-action" onclick="AppNavigation.switchCategory('bots')">⬅ Volver</button></div>` + cachedNewsTickers.map(item => {
+                    let messageText = item._full_text || item.text || item.message || item.content || 'Sin descripción';
+                    return `
+                        <div class="ticker-list-item">
+                            <div class="noti-header">
+                                <span>📅 ${item.date || item.publication_date || 'Fecha desconocida'}</span>
+                                <span style="color:var(--accent-secondary); text-transform:uppercase;">${item.category || 'News Ticker'}</span>
+                            </div>
+                            <div style="color:#fff; font-size:10px; line-height:1.4; margin-top:4px;">${messageText}</div>
+                        </div>
+                    `;
+                }).join('');
+            },
+            async renderMainNews() {
+                let container = document.getElementById('favList');
+                container.innerHTML = `<div style="margin-bottom:8px;"><button class="btn-action" onclick="AppNavigation.switchCategory('bots')">⬅ Volver</button></div><div class="empty-msg">⏳ Cargando Noticias Principales oficiales...</div>`;
+                document.getElementById('currentListTitle').textContent = '📰 News';
+
+                if (!cachedMainNews) cachedMainNews = await TibiaAPI.fetchMainNewsArchive();
+                if (!cachedMainNews || cachedMainNews.length === 0) {
+                    container.innerHTML = `<div style="margin-bottom:8px;"><button class="btn-action" onclick="AppNavigation.switchCategory('bots')">⬅ Volver</button></div><div class="empty-msg">No se pudieron cargar las noticias principales.</div>`;
+                    return;
+                }
+
+                container.innerHTML = `<div style="margin-bottom:8px;"><button class="btn-action" onclick="AppNavigation.switchCategory('bots')">⬅ Volver</button></div>` + cachedMainNews.map(item => {
+                    let titleText = item.news || item.title || item.headline || item.subject || 'Noticia de Tibia';
+                    let dateText = item.date || item.publication_date || '';
+                    let catText = item.category || item.type || 'News';
+                    let newsId = item.id || item.news_id || '';
+                    let newsUrl = newsId ? `https://www.tibia.com/news/?subtopic=newsarchive&id=${newsId}` : 'https://www.tibia.com/news/?subtopic=newsarchive';
+
+                    return `
+                        <a href="${newsUrl}" target="_blank" class="main-news-item">
+                            <div class="main-news-meta">
+                                <span>📅 ${dateText}</span>
+                                <span style="text-transform:uppercase;">${catText}</span>
+                            </div>
+                            <div class="main-news-title-link">⚔️ ${titleText} ↗</div>
+                        </a>
+                    `;
+                }).join('');
+            },
+            renderSearchResult() {
+                let box = document.getElementById('searchResult');
+                if (!tempChar || !box) return;
+
+                let online = tempChar.status === 'online', outfit = getOutfitUrl(tempChar.vocation, tempChar.sex, online, tempChar.category);
+                let existingChar = favorites.find(f => f.name.toLowerCase() === tempChar.name.toLowerCase());
+                let actionHtml = existingChar ? `<div style="font-size:10px; color:#2ecc71; text-align:center; flex:1;">✓ Ya guardado</div>`
+                    : `<div class="save-options"><button class="btn-add-cat btn-add-bot" onclick="CharacterManager.saveToCategory('bots')">+ Bot</button><button class="btn-add-cat btn-add-enemy" onclick="CharacterManager.saveToCategory('enemies')">+ Enemigo</button><button class="btn-add-cat btn-add-friend" onclick="CharacterManager.saveToCategory('friends')">+ Amigo</button></div>`;
+
+                let safeName = escapeQuotes(tempChar.name), safeWrapperId = `search-deaths-wrap-${tempChar.name.replace(/\s+/g, '_')}`;
+                let safeBoxId = `search-deaths-${tempChar.name.replace(/\s+/g, '_')}`;
+                let safeWorld = escapeQuotes(tempChar.world);
+                
+                let guildHtml = tempChar.guildRawName 
+                    ? `<div class="guild-text guild-clickable" onclick="loadGuildOnlineMembers('${escapeQuotes(tempChar.guildRawName)}')">🛡️ ${tempChar.guild} (Ver online)</div>`
+                    : `<div class="guild-text">🛡️ ${tempChar.guild}</div>`;
+
+                let deathsHtml = (tempChar.deaths || []).length > 0 ? tempChar.deaths.map(d => {
+                    let mName = escapeQuotes(extractMonsterName(d.reason));
+                    return `<div class="death-row"><img class="death-icon" src="${SAFE_FALLBACK_URL}" data-monster="${mName}" onclick="openCreatureWiki('${mName}', event)" onerror="this.onerror=null; this.src='${SAFE_FALLBACK_URL}';"><div><div class="death-time">🕒 ${formatTimeAgo(d.time)}</div><div><b>Nivel ${d.level}:</b> ${formatDeath(d.reason)}</div></div></div>`;
+                }).join('') : '<div style="color:#666; font-style:italic;">Sin muertes registradas.</div>';
+
+                box.innerHTML = `
+                    <button class="search-close-btn" onclick="CharacterManager.clearSearch()" title="Cerrar">✕</button>
+                    <div class="detailed-result">
+                        <div class="sprite-box" style="width:36px; height:36px;"><img class="sprite-img" src="${outfit}" alt="Outfit"></div>
+                        <div class="detailed-info">
+                            <div style="display:flex; align-items:center; justify-content:space-between; padding-right: 18px;">
+                                <b style="font-size:13px; color:#fff;">${tempChar.name}</b>
+                                <span class="badge ${online ? 'badge-online' : 'badge-offline'}">${online ? 'ONLINE' : 'OFFLINE'}</span>
+                            </div>
+                            <div style="font-size:10px; color:var(--accent-secondary);">Nivel: ${tempChar.level} | ${tempChar.vocation}</div>
+                            <div style="font-size:10px; color:#ccc;">
+                                <span class="world-link" onclick="openTibiaRingWorld('${safeWorld}', event)" title="Ver bots baneados en ${safeWorld} via TibiaRing">${tempChar.world}</span> | Residencia: ${tempChar.residence}
+                            </div>
+                            ${guildHtml}
+                        </div>
+                    </div>
+                    <div class="search-actions-row">
+                        <button class="btn-action btn-deaths-action" onclick="UIComponents.toggleDeathsContainer('${safeWrapperId}', this)">☠️ (${tempChar.deaths?.length || 0})</button>
+                        <button class="btn-action btn-guildstats" onclick="openGuildStats('${safeName}')" title="GuildStats">📊</button>
+                        <button class="btn-action btn-tibspy" onclick="openTibSpy('${safeName}')" title="Copiar nombre y abrir TibSpy">🕵️‍♂️</button>
+                        ${actionHtml}
+                    </div>
+                    <div id="${safeWrapperId}" class="deaths-box-wrapper">
+                        <button class="mini-scroll-btn top" onmousedown="startScrolling('${safeBoxId}', -6)" onmouseup="stopScrolling()" onmouseleave="stopScrolling()" ontouchstart="startScrolling('${safeBoxId}', -6)" ontouchend="stopScrolling()">▲</button>
+                        <div id="${safeBoxId}" class="deaths-box" data-loaded="false">${deathsHtml}</div>
+                        <button class="mini-scroll-btn bottom" onmousedown="startScrolling('${safeBoxId}', 6)" onmouseup="stopScrolling()" onmouseleave="stopScrolling()" ontouchstart="startScrolling('${safeBoxId}', 6)" ontouchend="stopScrolling()">▼</button>
+                    </div>
+                `;
+            },
+            async toggleDeathsContainer(wrapperSafeId, btnEl) {
+                let wrapper = document.getElementById(wrapperSafeId);
+                if (!wrapper) return;
+                let isOpen = wrapper.style.display === 'block';
+                wrapper.style.display = isOpen ? 'none' : 'block';
+                
+                if (!isOpen) {
+                    let box = wrapper.querySelector('.deaths-box');
+                    if (box && box.getAttribute('data-loaded') !== 'true') {
+                        for (let img of box.querySelectorAll('.death-icon')) {
+                            let mName = img.getAttribute('data-monster');
+                            if (mName) img.src = await fetchFandomGifUrl(mName);
+                        }
+                        box.setAttribute('data-loaded', 'true');
+                    }
+                }
+            },
+            async renderWorlds() {
+                let container = document.getElementById('favList');
+                let targetTypeTitle = currentWorldType === 'open' ? 'Open PvP' : 'Optional PvP (No PvP)';
+                container.innerHTML = `<div class="empty-msg">⏳ Cargando servidores ${targetTypeTitle}...</div>`;
+                viewingWorldDetails = null; currentWorldPlayersCache = [];
+                document.getElementById('currentListTitle').textContent = `🌍 Servidores ${targetTypeTitle}`;
+
+                let worldFilterRow = document.getElementById('worldFilterRow');
+                if (worldFilterRow) worldFilterRow.style.display = 'flex';
+
+                if (!cachedWorlds) cachedWorlds = await TibiaAPI.fetchAllWorlds();
+                if (!cachedWorlds || cachedWorlds.length === 0) { container.innerHTML = '<div class="empty-msg">No se pudieron cargar los mundos. Comprueba tu conexión.</div>'; return; }
+
+                let filteredWorlds = cachedWorlds.filter(w => {
+                    let type = (w.pvp_type || w.type || '').toLowerCase();
+                    if (currentWorldType === 'open') {
+                        return type === 'open pvp' || type === 'open';
+                    } else {
+                        return type === 'optional pvp' || type === 'optional' || type === 'non-pvp' || type === 'no pvp';
+                    }
+                });
+
+                filteredWorlds.sort((a, b) => {
+                    let isFavA = favWorlds.includes(a.name) ? 0 : 1;
+                    let isFavB = favWorlds.includes(b.name) ? 0 : 1;
+                    if (isFavA !== isFavB) return isFavA - isFavB;
+                    return (b.players_online || 0) - (a.players_online || 0);
+                });
+                
+                if (filteredWorlds.length === 0) {
+                    container.innerHTML = `<div class="empty-msg">No se encontraron mundos ${targetTypeTitle}.</div>`;
+                    return;
+                }
+
+                container.innerHTML = filteredWorlds.map(w => {
+                    let safeWName = escapeQuotes(w.name);
+                    let pvpType = w.pvp_type || w.type || targetTypeTitle;
+                    let isFav = favWorlds.includes(w.name);
+                    return `
+                        <div class="world-card ${isFav ? 'fav-world' : ''}">
+                            <div style="display:flex; align-items:center; gap:6px; flex:1; cursor:pointer;" onclick="UIComponents.renderWorldPlayers('${safeWName}', true)">
+                                <span onclick="toggleWorldFavorite('${safeWName}', event)" style="font-size:14px; cursor:pointer;" title="${isFav ? 'Quitar de favoritos' : 'Marcar como favorito'}">${isFav ? '⭐' : '☆'}</span>
+                                <div class="world-info">
+                                    <div class="world-name-row">
+                                        <span class="world-name">${w.name}</span>
+                                        ${w.premium_only ? '<span class="world-prem-badge">👑 Premium</span>' : ''}
+                                    </div>
+                                    <span class="world-type">${currentWorldType === 'open' ? '⚔️' : '🕊️'} ${pvpType}</span>
+                                </div>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">
+                                <button class="btn-action" style="color:#2ecc71; border-color:#2ecc71; font-size:9px;" onclick="openWorldMarket('${safeWName}', event)" title="Consultar Market">🛒 Market</button>
+                                <button class="btn-action" style="color:var(--accent-secondary); border-color:var(--accent-secondary); font-size:9px;" onclick="openTibiaRingWorld('${safeWName}', event)" title="Ver baneados en TibiaRing">🤖 Baneados</button>
+                                <div class="world-count" onclick="UIComponents.renderWorldPlayers('${safeWName}', true)">👥 ${w.players_online || 0} online</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            },
+            async renderWorldPlayers(worldName, fetchNew = false) {
+                let container = document.getElementById('favList');
+                if (viewingWorldDetails !== worldName) { fetchNew = true; currentWorldPlayersCache = []; }
+                viewingWorldDetails = worldName;
+                document.getElementById('currentListTitle').textContent = `🌍 ${worldName} (Conectados)`;
+
+                let worldFilterRow = document.getElementById('worldFilterRow');
+                if (worldFilterRow) worldFilterRow.style.display = 'none';
+
+                if (fetchNew || currentWorldPlayersCache.length === 0) {
+                    container.innerHTML = `<div class="empty-msg">⏳ Consultando jugadores conectados en ${worldName}...</div>`;
+                    currentWorldPlayersCache = await TibiaAPI.fetchWorldOnlinePlayers(worldName);
+                    if (!currentWorldPlayersCache) { container.innerHTML = `<div class="empty-msg">Error al conectar con el servidor de ${worldName}.</div>`; return; }
+                }
+
+                if (currentWorldPlayersCache.length === 0) {
+                    container.innerHTML = `<div style="margin-bottom:8px;"><button class="btn-action" onclick="UIComponents.renderWorlds()">⬅ Volver a Mundos</button></div><div class="empty-msg">No hay jugadores conectados en este momento.</div>`;
+                    return;
+                }
+
+                currentWorldPlayersCache.sort((a, b) => sortDescOrder ? (parseInt(b.level, 10) || 0) - (parseInt(a.level, 10) || 0) : (parseInt(a.level, 10) || 0) - (parseInt(b.level, 10) || 0));
+                let sortBtnText = sortDescOrder ? '🔽 Mayor a Menor' : '🔼 Menor a Mayor';
+                let safeW = escapeQuotes(worldName);
+
+                container.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; gap:4px; flex-wrap:wrap;">
+                        <button class="btn-action" onclick="UIComponents.renderWorlds()">⬅ Volver</button>
+                        <div style="display:flex; gap:4px;">
+                            <button class="btn-action" style="color:#2ecc71; border-color:#2ecc71;" onclick="openWorldMarket('${safeW}', event)">🛒 Market</button>
+                            <button class="btn-action" style="color:var(--accent-secondary); border-color:var(--accent-secondary);" onclick="openTibiaRingWorld('${safeW}', event)">🤖 Bots</button>
+                        </div>
+                        <button class="btn-action" onclick="toggleWorldSort('${safeW}')">${sortBtnText}</button>
+                        <span style="font-size:10px; color:#888;">${currentWorldPlayersCache.length} online</span>
+                    </div>
+                ` + currentWorldPlayersCache.map(p => `
+                    <div class="online-player-row">
+                        <span class="online-player-name" onclick="searchPlayer('${escapeQuotes(p.name)}')">${p.name}</span>
+                        <span class="online-player-info">Nv. ${p.level || 0} | ${p.vocation || 'Desconocida'}</span>
+                    </div>
+                `).join('');
+            },
+            renderFavs() {
+                let container = document.getElementById('favList');
+                container.innerHTML = '';
+                let currentList = favorites.filter(f => (f.category || 'bots') === currentCategory);
+
+                if (currentFilterStatus === 'online') currentList = currentList.filter(f => f.status === 'online');
+                else if (currentFilterStatus === 'offline') currentList = currentList.filter(f => f.status === 'offline' || f.status === 'deleted');
+
+                if (currentList.length === 0) { container.innerHTML = '<div class="empty-msg">No hay personajes que coincidan con este filtro.</div>'; return; }
+
+                currentList.sort((a, b) => {
+                    const getScore = (status) => status === 'online' ? 1 : (status === 'offline' ? 2 : 3);
+                    return getScore(a.status) - getScore(b.status) || a.name.localeCompare(b.name);
+                });
+
+                for (let f of currentList) {
+                    let isOnline = f.status === 'online', isDeleted = f.status === 'deleted';
+                    let outfit = getOutfitUrl(f.vocation, f.sex, isOnline && !isDeleted, f.category);
+                    let badgeHtml = isDeleted ? `<span class="badge badge-deleted">BANNED</span>` : (isOnline ? `<span class="badge badge-online">ONLINE</span>` : `<span class="badge badge-offline">OFFLINE</span>`);
+
+                    let deathsHtml = (f.deaths || []).length > 0 ? f.deaths.map(d => {
+                        let mName = escapeQuotes(extractMonsterName(d.reason));
+                        return `<div class="death-row"><img class="death-icon" src="${SAFE_FALLBACK_URL}" data-monster="${mName}" onclick="openCreatureWiki('${mName}', event)" onerror="this.onerror=null; this.src='${SAFE_FALLBACK_URL}';"><div><div class="death-time">🕒 ${formatTimeAgo(d.time)}</div><div><b>Nivel ${d.level}:</b> ${formatDeath(d.reason)}</div></div></div>`;
+                    }).join('') : '<div style="color:#666; font-style:italic;">Sin muertes registradas.</div>';
+
+                    let safeName = escapeQuotes(f.name), safeWrapperId = `death-wrap-${f.name.replace(/\s+/g, '_')}`;
+                    let safeBoxId = `death-box-${f.name.replace(/\s+/g, '_')}`;
+                    let safeNoteId = `note-box-${f.name.replace(/\s+/g, '_')}`;
+                    let safeWorld = escapeQuotes(f.world);
+                    let card = document.createElement('div');
+                    card.className = `fav-card ${isCompactMode ? 'compact' : ''}`;
+                    
+                    let noteText = f.note || '';
+                    card.innerHTML = `
+                        <div class="fav-main">
+                            <div class="fav-left" onclick="searchPlayer('${safeName}')" title="Ver detalles">
+                                <div class="sprite-box"><img class="sprite-img" src="${outfit}" alt="Outfit"></div>
+                                <div class="fav-details">
+                                    <span style="font-weight:bold; color:#fff; font-size:12px;">${f.name}</span>
+                                    <div style="font-size:10px; color:#aaa;">
+                                        Lv. ${f.level} | ${f.vocation} | <span class="world-link" onclick="openTibiaRingWorld('${safeWorld}', event)" title="Ver bots baneados en ${safeWorld} via TibiaRing">${f.world}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="status-col">${badgeHtml}</div>
+                            <div class="fav-actions">
+                                <button class="btn-action btn-deaths-action" onclick="UIComponents.toggleDeathsContainer('${safeWrapperId}', this)">☠️ (${f.deaths?.length || 0})</button>
+                                <button class="btn-action" onclick="toggleNoteBox('${safeNoteId}', event)" title="Nota personal" style="color:var(--accent-secondary); border-color:var(--accent-secondary);">📝</button>
+                                <button class="btn-action btn-guildstats" onclick="openGuildStats('${safeName}')" title="Ver en GuildStats">📊</button>
+                                <button class="btn-action btn-tibspy" onclick="openTibSpy('${safeName}')" title="Copiar nombre y abrir TibSpy">🕵️‍♂️</button>
+                                <button class="btn-action" style="color:#e74c3c;" onclick="CharacterManager.remove('${safeName}')">✕</button>
+                            </div>
+                        </div>
+                        <div id="${safeNoteId}" class="char-note-container">
+                            <input type="text" placeholder="Escribe nota corta..." value="${escapeQuotes(noteText)}" oninput="updateCharacterNote('${safeName}', this.value)">
+                        </div>
+                        <div id="${safeWrapperId}" class="deaths-box-wrapper">
+                            <button class="mini-scroll-btn top" onmousedown="startScrolling('${safeBoxId}', -6)" onmouseup="stopScrolling()" onmouseleave="stopScrolling()" ontouchstart="startScrolling('${safeBoxId}', -6)" ontouchend="stopScrolling()">▲</button>
+                            <div id="${safeBoxId}" class="deaths-box" data-loaded="false">${deathsHtml}</div>
+                            <button class="mini-scroll-btn bottom" onmousedown="startScrolling('${safeBoxId}', 6)" onmouseup="stopScrolling()" onmouseleave="stopScrolling()" ontouchstart="startScrolling('${safeBoxId}', 6)" ontouchend="stopScrolling()">▼</button>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                }
+            },
+            renderNotifications() {
+                let container = document.getElementById('favList');
+                container.innerHTML = '';
+                
+                let filteredNotis = notifications;
+                if (currentNotiFilter === 'death') filteredNotis = notifications.filter(n => n.type === 'death');
+                else if (currentNotiFilter === 'level') filteredNotis = notifications.filter(n => n.type === 'level');
+
+                let filterBtnsHtml = `
+                    <div style="display:flex; gap:4px; margin-bottom:8px;">
+                        <button class="filter-btn ${currentNotiFilter === 'all' ? 'active' : ''}" onclick="setNotiFilter('all')">Todas (${notifications.length})</button>
+                        <button class="filter-btn ${currentNotiFilter === 'death' ? 'active' : ''}" onclick="setNotiFilter('death')">☠️ Muertes</button>
+                        <button class="filter-btn ${currentNotiFilter === 'level' ? 'active' : ''}" onclick="setNotiFilter('level')">🎉 Niveles</button>
+                    </div>
+                `;
+
+                if (notifications.length === 0) {
+                    container.innerHTML = filterBtnsHtml + '<div class="empty-msg">No hay notificaciones registradas.</div>';
+                    return;
+                }
+
+                let clearBtnHtml = `<div style="text-align:right; margin-bottom:8px;"><button class="btn-action" style="color:#e74c3c; border-color:#e74c3c;" onclick="NotificationManager.clearAll()">🗑️ Vaciar Historial</button></div>`;
+                
+                if (filteredNotis.length === 0) {
+                    container.innerHTML = filterBtnsHtml + clearBtnHtml + '<div class="empty-msg">No hay eventos con este filtro.</div>';
+                    return;
+                }
+
+                let listHtml = filteredNotis.map(n => `
+                    <div class="noti-item ${n.type}">
+                        <div class="noti-header">
+                            <span>${n.type === 'death' ? NOTIF_TEXTS.deathTitle : (n.type === 'level' ? NOTIF_TEXTS.levelTitle : NOTIF_TEXTS.deletedTitle)}</span>
+                            <span>🕒 ${formatTimeAgo(n.timestamp)}</span>
+                        </div>
+                        <div style="font-weight:bold; color:#fff; margin-bottom:1px; font-size:12px;">${n.title}</div>
+                        <div style="color:#ccc; font-size:11px;">${n.message}</div>
+                    </div>
+                `).join('');
+
+                container.innerHTML = filterBtnsHtml + clearBtnHtml + listHtml;
+            }
+        };
+
+        function setNotiFilter(filter) {
+            currentNotiFilter = filter;
+            UIComponents.renderNotifications();
+        }
+
+        let scrollInterval = null;
+        function startScrolling(boxId, amount) {
+            stopScrolling();
+            let box = document.getElementById(boxId);
+            if (!box) return;
+            box.scrollTop += amount;
+            scrollInterval = setInterval(() => {
+                box.scrollTop += amount;
+            }, 30);
+        }
+
+        function stopScrolling() {
+            if (scrollInterval) {
+                clearInterval(scrollInterval);
+                scrollInterval = null;
+            }
+        }
+
+        async function loadGuildOnlineMembers(guildName) {
+            let container = document.getElementById('favList');
+            document.getElementById('currentListTitle').textContent = `🛡️ Guild: ${guildName} (Online)`;
+            container.innerHTML = `<div class="empty-msg">⏳ Consultando miembros online de ${guildName}...</div>`;
+
+            try {
+                let res = await fetch(`https://api.tibiadata.com/v4/guild/${encodeURIComponent(guildName)}`);
+                if (!res.ok) {
+                    container.innerHTML = `<div class="empty-msg">No se pudo conectar con la API de Guilds.</div>`;
+                    return;
+                }
+                let data = await res.json();
+                let guildData = data.guild || data.data?.guild;
+                let members = guildData?.members || [];
+                let onlineMembers = members.filter(m => (m.status || '').toLowerCase() === 'online');
+
+                if (onlineMembers.length === 0) {
+                    container.innerHTML = `
+                        <div style="margin-bottom:8px;"><button class="btn-action" onclick="UIComponents.renderFavs()">⬅ Volver a lista</button></div>
+                        <div class="empty-msg">No hay miembros de ${guildName} conectados en este momento.</div>
+                    `;
+                    return;
+                }
+
+                const getRankWeight = (rankName) => {
+                    let r = (rankName || '').toLowerCase();
+                    if (r.includes('leader') && !r.includes('vice')) return 1;
+                    if (r.includes('vice') || r.includes('sub')) return 2;
+                    if (r.includes('guard') || r.includes('officer')) return 3;
+                    return 4;
+                };
+
+                onlineMembers.sort((a, b) => {
+                    let weightA = getRankWeight(a.rank);
+                    let weightB = getRankWeight(b.rank);
+                    if (weightA !== weightB) return weightA - weightB;
+                    return (parseInt(b.level, 10) || 0) - (parseInt(a.level, 10) || 0);
+                });
+
+                container.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <button class="btn-action" onclick="UIComponents.renderFavs()">⬅ Volver</button>
+                        <span style="font-size:10px; color:#888;">${onlineMembers.length} online</span>
+                    </div>
+                ` + onlineMembers.map(m => `
+                    <div class="online-player-row">
+                        <div>
+                            <span class="online-player-name" onclick="searchPlayer('${escapeQuotes(m.name)}')">${m.name}</span>
+                            <div style="font-size:9px; color:var(--accent-primary); font-weight:bold;">${m.rank || ''}</div>
+                        </div>
+                        <span class="online-player-info">Nv. ${m.level || 0} | ${m.vocation || 'Desconocida'}</span>
+                    </div>
+                `).join('');
+            } catch (e) {
+                container.innerHTML = `<div class="empty-msg">Error al cargar la información de la guild.</div>`;
+            }
+        }
+
+        let creatureSearchDebounce = null;
+        async function handleTibiaDataCreatureInput(e) {
+            let query = e.target.value.trim().toLowerCase();
+            let box = document.getElementById('creatureSuggestions');
+            if (!box) return;
+
+            if (creatureSearchDebounce) clearTimeout(creatureSearchDebounce);
+            if (query.length < 2) { box.style.display = 'none'; box.innerHTML = ''; return; }
+
+            creatureSearchDebounce = setTimeout(async () => {
+                box.style.display = 'flex';
+                box.innerHTML = `<div style="padding: 8px; color: #888; text-align: center; font-size: 10px;">⏳ Buscando en TibiaData...</div>`;
+
+                try {
+                    if (!cachedTibiaDataCreatures) {
+                        let res = await fetch('https://api.tibiadata.com/v4/creatures');
+                        if (res.ok) {
+                            let data = await res.json();
+                            let root = data.creatures || data.data?.creatures || data;
+                            cachedTibiaDataCreatures = root?.creature_list || root?.list || [];
+                        } else { cachedTibiaDataCreatures = []; }
+                    }
+
+                    let matches = cachedTibiaDataCreatures.filter(c => c.name && c.name.toLowerCase().includes(query)).slice(0, 8);
+                    if (matches.length === 0) {
+                        box.innerHTML = `<div style="padding: 8px; color: #888; text-align: center; font-size: 10px;">No hay resultados en TibiaData para "${query}".</div>`;
+                        return;
+                    }
+
+                    let html = '';
+                    matches.forEach(c => {
+                        let safeMName = escapeQuotes(c.name);
+                        html += `
+                            <div class="suggestion-item" onclick="selectCreatureSuggestion('${safeMName}')">
+                                <span class="suggestion-name">🐲 ${c.name}</span>
+                                <span class="suggestion-tag">TibiaData</span>
+                            </div>
+                        `;
+                    });
+                    box.innerHTML = html;
+                } catch (err) {
+                    box.innerHTML = `<div style="padding: 8px; color: #ff8787; text-align: center; font-size: 10px;">Error al conectar con TibiaData.</div>`;
+                }
+            }, 200);
+        }
+
+        function selectCreatureSuggestion(monsterName) {
+            let inputEl = document.getElementById('creatureSearchInput');
+            let box = document.getElementById('creatureSuggestions');
+            if (inputEl) inputEl.value = monsterName;
+            if (box) { box.style.display = 'none'; box.innerHTML = ''; }
+            loadCreatureInline(monsterName);
+        }
+
+        function executeCreatureSearch() {
+            let inputEl = document.getElementById('creatureSearchInput');
+            if (!inputEl) return;
+            let val = inputEl.value.trim();
+            let box = document.getElementById('creatureSuggestions');
+            if (box) { box.style.display = 'none'; box.innerHTML = ''; }
+            if (!val) { alert('Escribe el nombre de una criatura o boss.'); return; }
+            loadCreatureInline(val);
+        }
+
+        function handleCreatureSearchKey(e) { if (e.key === 'Enter') executeCreatureSearch(); }
+
+        function toggleMenu(event) {
+            event.stopPropagation();
+            let menu = document.getElementById('dropdownMenu');
+            menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        function closeMenuOnClickOutside(event) {
+            let menu = document.getElementById('dropdownMenu');
+            if (menu && menu.style.display === 'flex') menu.style.display = 'none';
+            
+            let suggBox = document.getElementById('creatureSuggestions');
+            let searchInput = document.getElementById('creatureSearchInput');
+            if (suggBox && suggBox.style.display === 'flex' && event.target !== searchInput) {
+                suggBox.style.display = 'none';
+            }
+        }
+
+        function searchPlayer(name) { CharacterManager.search(name); }
+        function handleSearchKey(e) { if (e.key === 'Enter') CharacterManager.search(); }
+        function toggleWorldSort(worldName) { sortDescOrder = !sortDescOrder; UIComponents.renderWorldPlayers(worldName, false); }
+
+        const AUTO_UPDATE_INTERVAL_MS = 10 * 60 * 1000;
+        setInterval(() => {
+            if (document.visibilityState === 'visible') CharacterManager.updateAll();
+        }, AUTO_UPDATE_INTERVAL_MS);
+
+        UIComponents.updateNotiBadge();
+        UIComponents.renderFavs();
+        UIComponents.loadBoostedContent();
+        UIComponents.loadTickerHeader();
+        loadRashidInfo();
+        loadTopBarSprites();
+    </script>
+</body>
+</html>
