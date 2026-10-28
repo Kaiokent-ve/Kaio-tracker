@@ -14,34 +14,34 @@
             --text-main: #e0e0e0;
             --border-radius: 6px;
             --font-scale: 12px;
-            --neon-glow-primary: none;
-            --neon-glow-border: none;
-            --neon-glow-text: none;
             --card-opacity: 1;
             
             --tab-rashid-color: #3498db;
             --tab-creature-color: #e74c3c;
-            --tab-tools-color: #bb86fc;
             --tab-news-color: #f39c12;
+            --tab-glooms-color: #0f766e;
+            --tab-accounts-color: #bb86fc;
         }
     </style>
     <style>
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: var(--bg-body); color: var(--text-main); margin: 0 auto; padding: 6px; font-size: var(--font-scale); max-width: 480px;
+            position: relative; min-height: 100vh;
         }
         body.modal-open { overflow: hidden; position: fixed; width: 100%; left: 0; right: 0; }
         .app-header {
             display: flex; justify-content: space-between; align-items: center; background: var(--bg-card);
-            border: 1px solid #333; padding: 6px 10px; border-radius: var(--border-radius); margin-bottom: 6px; position: relative;
-            box-shadow: var(--neon-glow-border); opacity: var(--card-opacity);
+            border: 1px solid rgba(255,255,255,0.08); padding: 6px 10px; border-radius: var(--border-radius); margin-bottom: 6px; position: relative;
+            opacity: var(--card-opacity);
         }
         .app-title { font-size: 14px; font-weight: bold; color: var(--accent-primary); margin: 0; text-shadow: none; }
         .header-actions { display: flex; align-items: center; gap: 6px; }
         .noti-btn {
-            background: #252525; border: 1px solid #444; color: #fff; padding: 4px; border-radius: var(--border-radius);
+            background: var(--bg-subcard); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 4px; border-radius: var(--border-radius);
             cursor: pointer; position: relative; display: flex; align-items: center; justify-content: center; width: 28px; height: 28px;
+            outline: none;
         }
         .noti-btn svg { width: 15px; height: 15px; fill: var(--text-main); }
         .noti-badge-top {
@@ -49,29 +49,30 @@
             font-size: 8px; font-weight: bold; border-radius: 8px; padding: 1px 4px; line-height: 1; border: 1px solid var(--bg-card);
         }
         .menu-btn {
-            background: #252525; border: 1px solid #444; color: #fff; font-size: 15px; padding: 2px 6px;
+            background: var(--bg-subcard); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 15px; padding: 2px 6px;
             border-radius: var(--border-radius); cursor: pointer; height: 28px; display: flex; align-items: center; justify-content: center;
+            outline: none;
         }
         .dropdown-menu {
-            display: none; position: absolute; right: 0; top: 36px; background: var(--bg-card); border: 1px solid #444;
+            display: none; position: absolute; right: 0; top: 36px; background: var(--bg-card); border: 1px solid rgba(255,255,255,0.15);
             border-radius: var(--border-radius); box-shadow: 0 4px 12px rgba(0,0,0,0.6); z-index: 1000; width: 195px; flex-direction: column; overflow: hidden;
         }
         .dropdown-item {
             padding: 10px 12px; color: var(--text-main); background: transparent; border: none; text-align: left;
-            width: 100%; cursor: pointer; font-size: 12px; font-weight: bold; border-bottom: 1px solid #2a2a2a;
+            width: 100%; cursor: pointer; font-size: 12px; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.05); outline: none;
         }
         .dropdown-item:last-child { border-bottom: none; }
-        .dropdown-item:hover, .dropdown-item:active { background: #2a2a2a; color: var(--accent-primary); }
+        .dropdown-item:hover, .dropdown-item:active { background: var(--bg-subcard); color: var(--accent-primary); }
         
         #liveToastContainer {
             position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
-            width: 92%; max-width: 460px; z-index: 2000; display: flex; flex-direction: column; gap: 6px; pointer-events: none;
+            width: 90%; max-width: 340px; z-index: 2000; display: flex; flex-direction: column; gap: 6px; pointer-events: none;
         }
         .live-toast-card {
-            pointer-events: auto; background: var(--bg-card); color: var(--text-main); padding: 8px 10px; border-radius: var(--border-radius);
+            pointer-events: auto; background: var(--bg-card); color: var(--text-main); padding: 8px 12px; border-radius: var(--border-radius);
             font-size: 11px; cursor: pointer; text-align: left;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.8); border: 1px solid #333; border-left: 4px solid var(--accent-primary);
-            max-height: 100px; overflow: hidden; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); animation: slideDown 0.3s ease;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.85); border: 1px solid rgba(255,255,255,0.1); border-left: 4px solid var(--accent-primary);
+            max-height: 100px; overflow: hidden; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); animation: slideDown 0.3s ease;
         }
         .live-toast-card.fade-out { opacity: 0; max-height: 0; padding-top: 0; padding-bottom: 0; margin-top: 0; margin-bottom: 0; border-width: 0; }
         .live-toast-card.death { border-left-color: #e74c3c; border-color: rgba(231, 76, 60, 0.4); }
@@ -84,90 +85,96 @@
         .live-toast-card.deleted .toast-title { color: #f39c12; }
 
         @keyframes slideDown {
-            from { transform: translateY(-15px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+            from { transform: translateY(-15px) translateX(-50%); opacity: 0; }
+            to { transform: translateY(0) translateX(-50%); opacity: 1; }
         }
 
         .boosted-container { display: flex; gap: 6px; margin-bottom: 6px; }
         .boosted-card {
-            flex: 1; background: var(--bg-card); border: 1px solid #333; border-left: 3px solid var(--accent-primary);
+            flex: 1; background: var(--bg-card); border: 1px solid rgba(255,255,255,0.08); border-left: 3px solid var(--accent-primary);
             padding: 6px 8px; border-radius: var(--border-radius); display: flex; align-items: center; justify-content: space-between;
-            box-shadow: var(--neon-glow-border); opacity: var(--card-opacity);
+            opacity: var(--card-opacity);
         }
         .boosted-card.boss { border-left-color: #e74c3c; }
         .boosted-info { display: flex; align-items: center; gap: 6px; overflow: hidden; }
-        .boosted-sprite { width: 30px; height: 30px; object-fit: contain; flex-shrink: 0; cursor: pointer; background: transparent; border-radius: 0; }
+        .boosted-sprite { width: 40px; height: 40px; object-fit: contain; flex-shrink: 0; cursor: pointer; background: transparent; border-radius: 0; }
         .boosted-title { font-size: 8px; color: #888; text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px; }
         .boosted-name { font-size: 10px; font-weight: bold; color: var(--accent-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: none; }
         .boosted-card.boss .boosted-name { color: #ff8787; }
         
         .news-buttons-grid { display: flex; gap: 6px; margin-bottom: 6px; }
         .ticker-card {
-            flex: 1; background: var(--bg-card); border: 1px solid #333; border-left: 3px solid var(--tab-news-color);
+            flex: 1; background: var(--bg-card); border: 1px solid rgba(255,255,255,0.08); border-left: 3px solid var(--tab-news-color);
             padding: 6px 8px; border-radius: var(--border-radius); display: flex; align-items: center; justify-content: space-between; gap: 4px;
             cursor: pointer; transition: background 0.2s, border-color 0.2s; min-width: 0; position: relative;
-            box-shadow: var(--neon-glow-border); opacity: var(--card-opacity);
+            opacity: var(--card-opacity);
+            outline: none; -webkit-tap-highlight-color: transparent;
         }
-        .ticker-card:hover { background: #222; }
-        .ticker-card.highlighted { border-color: var(--accent-secondary); box-shadow: 0 0 10px rgba(243, 156, 18, 0.5); background: #252018; }
+        .ticker-card:hover { background: var(--bg-subcard); }
+        .ticker-card.highlighted { border-color: var(--accent-secondary); background: var(--bg-subcard); }
         .ticker-card.highlighted .boosted-title { color: var(--accent-secondary); }
         .ticker-info { display: flex; flex-direction: column; gap: 2px; overflow: hidden; flex: 1; }
         .ticker-text { font-size: 10px; color: #ddd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; }
 
         .main-news-item {
-            background: var(--bg-subcard); border: 1px solid #2a2a2a; border-left: 3px solid var(--tab-news-color);
+            background: var(--bg-subcard); border: 1px solid rgba(255,255,255,0.06); border-left: 3px solid var(--tab-news-color);
             border-radius: var(--border-radius); padding: 10px 12px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 4px;
-            cursor: pointer; transition: background 0.2s; text-decoration: none; box-shadow: var(--neon-glow-border); opacity: var(--card-opacity);
+            cursor: pointer; transition: background 0.2s; text-decoration: none; opacity: var(--card-opacity);
         }
-        .main-news-item:hover { background: #222; }
+        .main-news-item:hover { background: var(--bg-card); }
         .main-news-meta { display: flex; justify-content: space-between; font-size: 9px; color: #888; font-weight: bold; }
         .main-news-title-link { font-size: 11px; font-weight: bold; color: #ddd; line-height: 1.4; }
 
-        .top-symmetric-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 6px; }
+        .top-symmetric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 6px; }
         .sym-card {
-            background: var(--bg-card); border: 1px solid #333; border-radius: var(--border-radius); padding: 6px 8px;
+            background: var(--bg-card); border: 1px solid rgba(255,255,255,0.08); border-radius: var(--border-radius); padding: 6px 4px;
             display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; cursor: pointer;
-            box-shadow: var(--neon-glow-border); min-width: 0; transition: background 0.2s; opacity: var(--card-opacity);
+            min-width: 0; transition: background 0.2s; opacity: var(--card-opacity);
+            outline: none; -webkit-tap-highlight-color: transparent; user-select: none;
         }
-        .sym-card:hover { background: #222; }
+        .sym-card:hover { background: var(--bg-subcard); }
+        .sym-card:active, .sym-card:focus { background: var(--bg-subcard); outline: none; }
         .sym-card.rashid { border-left: 3px solid var(--tab-rashid-color); }
         .sym-card.creatures { border-left: 3px solid var(--tab-creature-color); }
-        .sym-card.tools { border-left: 3px solid var(--tab-tools-color); }
+        .sym-card.glooms { border-left: 3px solid var(--tab-glooms-color); }
+        .sym-card.accounts { border-left: 3px solid var(--tab-accounts-color); }
 
-        .sym-sprite { width: 26px; height: 26px; object-fit: contain; background: transparent; margin-bottom: 2px; }
-        .sym-title { font-size: 8px; color: #888; text-transform: uppercase; font-weight: bold; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .sym-value { font-size: 10px; font-weight: bold; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: none; }
+        .sym-sprite { width: 34px; height: 34px; object-fit: contain; background: transparent; margin-bottom: 2px; }
+        .sym-title { font-size: 7.5px; color: #888; text-transform: uppercase; font-weight: bold; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sym-value { font-size: 9.5px; font-weight: bold; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: none; }
         .sym-card.rashid .sym-value { color: var(--tab-rashid-color); }
         .sym-card.creatures .sym-value { color: #ff8787; }
-        .sym-card.tools .sym-value { color: var(--tab-tools-color); }
+        .sym-card.glooms .sym-value { color: #4ade80; }
+        .sym-card.accounts .sym-value { color: var(--accent-primary); }
 
         .search-card {
-            background: var(--bg-card); border: 1px solid #333; padding: 8px 10px;
+            background: var(--bg-card); border: 1px solid rgba(255,255,255,0.08); padding: 8px 10px;
             border-radius: var(--border-radius); display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; position: relative;
-            box-shadow: var(--neon-glow-border); opacity: var(--card-opacity);
+            opacity: var(--card-opacity);
         }
         .search-row { display: flex; gap: 5px; position: relative; }
         .search-row input, .search-row select {
-            flex: 1; padding: 6px 8px; background: var(--bg-body); border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 12px;
+            flex: 1; padding: 6px 8px; background: var(--bg-body); border: 1px solid rgba(255,255,255,0.12); color: #fff; border-radius: 4px; font-size: 12px;
+            outline: none;
         }
         .search-row button {
             padding: 6px 12px; background: var(--accent-primary); color: #121212; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;
-            box-shadow: var(--neon-glow-primary);
+            outline: none;
         }
 
         .creature-suggestions-box {
-            position: absolute; top: 100%; left: 0; right: 0; background: #181818; border: 1px solid #3498db;
+            position: absolute; top: 100%; left: 0; right: 0; background: var(--bg-card); border: 1px solid var(--accent-primary);
             border-radius: 0 0 var(--border-radius) var(--border-radius); max-height: 220px; overflow-y: auto; z-index: 1000; box-shadow: 0 6px 15px rgba(0,0,0,0.8);
             display: none; flex-direction: column;
         }
         .suggestion-item {
-            display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid #252525;
+            display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.05);
             cursor: pointer; transition: background 0.15s;
         }
         .suggestion-item:last-child { border-bottom: none; }
-        .suggestion-item:hover, .suggestion-item:active { background: #222; }
-        .suggestion-name { font-size: 11px; font-weight: bold; color: #3498db; }
-        .suggestion-tag { font-size: 8px; background: rgba(52, 152, 219, 0.2); color: #3498db; border: 1px solid #3498db; border-radius: 3px; padding: 1px 4px; font-weight: bold; }
+        .suggestion-item:hover, .suggestion-item:active { background: var(--bg-subcard); }
+        .suggestion-name { font-size: 11px; font-weight: bold; color: var(--accent-primary); }
+        .suggestion-tag { font-size: 8px; background: rgba(187,134,252,0.15); color: var(--accent-primary); border: 1px solid var(--accent-primary); border-radius: 3px; padding: 1px 4px; font-weight: bold; }
 
         .update-alert {
             display: none; background: rgba(231, 76, 60, 0.15); border: 1px solid #e74c3c;
@@ -177,48 +184,66 @@
         
         .search-result {
             background: var(--bg-card); padding: 8px 10px; border-radius: var(--border-radius); border-left: 3px solid var(--accent-secondary); 
-            display: none; margin-bottom: 8px; border: 1px solid #333; position: relative;
+            display: none; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.08); position: relative;
             will-change: transform, opacity; transform: translateZ(0);
-            box-shadow: var(--neon-glow-border); opacity: var(--card-opacity);
+            opacity: var(--card-opacity);
         }
         .search-result.floating {
             position: fixed; top: 10px; left: 50%; transform: translateX(-50%) translateZ(0); width: 92%; max-width: 460px;
             z-index: 2500; border: 1px solid var(--accent-primary); border-left: 4px solid var(--accent-secondary);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.85), var(--neon-glow-border); animation: slideDown 0.3s ease;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.85); animation: slideDown 0.3s ease;
             touch-action: none; overscroll-behavior: contain; will-change: transform, opacity;
+            max-height: 90vh; overflow-y: auto;
         }
         .search-result.error { border-left-color: #e74c3c; color: #ff8787; }
         .search-close-btn {
             position: absolute; top: 5px; right: 5px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08);
             color: #777; font-size: 10px; font-weight: bold; cursor: pointer; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; border-radius: 4px; transition: all 0.2s ease;
+            z-index: 10; outline: none;
         }
         .search-close-btn:hover, .search-close-btn:active { background: rgba(255, 255, 255, 0.12); color: #ccc; }
-        .detailed-result { display: flex; align-items: center; gap: 10px; padding-right: 16px; }
+        .detailed-result { display: flex; align-items: flex-start; gap: 10px; padding-right: 16px; }
         .detailed-info { display: flex; flex-direction: column; gap: 2px; overflow: hidden; flex: 1; }
-        .guild-text { font-size: 10px; color: #3498db; font-weight: bold; }
+        .guild-text { font-size: 10px; color: var(--accent-primary); font-weight: bold; }
         .guild-clickable { cursor: pointer; text-decoration: underline; }
-        .guild-clickable:hover { color: #5dade2; }
+        .guild-clickable:hover { opacity: 0.8; }
         
         .world-link { color: #aaa; cursor: pointer; transition: color 0.2s; }
-        .world-link:hover { color: #3498db; text-decoration: underline; }
+        .world-link:hover { color: var(--accent-primary); text-decoration: underline; }
+
+        .search-extra-section {
+            background: var(--bg-subcard); border: 1px solid rgba(255,255,255,0.06); border-radius: 4px; padding: 6px 8px; margin-top: 6px; font-size: 10px;
+        }
+        .search-extra-title {
+            font-size: 9px; font-weight: bold; color: var(--accent-secondary); text-transform: uppercase; margin-bottom: 3px; display: flex; justify-content: space-between; align-items: center;
+        }
+        .search-alts-grid {
+            display: grid; grid-template-columns: 1fr; gap: 4px; max-height: 120px; overflow-y: auto; margin-top: 4px;
+        }
+        .alt-char-row {
+            display: flex; justify-content: space-between; align-items: center; background: var(--bg-card); padding: 4px 6px; border-radius: 3px; border: 1px solid rgba(255,255,255,0.06); cursor: pointer; transition: background 0.15s;
+        }
+        .alt-char-row:hover { background: var(--bg-subcard); border-color: var(--accent-primary); }
+        .alt-char-name { font-weight: bold; color: var(--accent-primary); }
+        .alt-char-meta { font-size: 9px; color: #aaa; }
 
         .search-actions-row {
             display: flex; justify-content: space-between; align-items: center;
-            margin-top: 8px; padding-top: 6px; border-top: 1px solid #333; gap: 4px;
+            margin-top: 8px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.08); gap: 4px;
         }
         .save-options { display: flex; gap: 4px; flex: 1; }
-        .btn-add-cat { flex: 1; padding: 5px; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; font-size: 10px; }
+        .btn-add-cat { flex: 1; padding: 5px; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; font-size: 10px; outline: none; }
         .btn-add-bot { background: #e67e22; color: #fff; }
         .btn-add-enemy { background: #e74c3c; color: #fff; }
         .btn-add-friend { background: #2ecc71; color: #000; }
         
         .tabs-row {
-            display: flex; gap: 3px; background: var(--bg-subcard); padding: 3px; border-radius: var(--border-radius); border: 1px solid #2a2a2a; margin-bottom: 8px; overflow-x: auto;
+            display: flex; gap: 3px; background: var(--bg-subcard); padding: 3px; border-radius: var(--border-radius); border: 1px solid rgba(255,255,255,0.06); margin-bottom: 8px; overflow-x: auto;
         }
         .tab-btn {
             flex: 1; padding: 6px 2px; border: 1px solid transparent; background: transparent; color: #888;
             font-weight: bold; font-size: 8px; border-radius: 4px; cursor: pointer; text-align: center; white-space: nowrap;
-            transition: background 0.2s, color 0.2s, border-color 0.2s;
+            transition: background 0.2s, color 0.2s, border-color 0.2s; outline: none;
         }
         .tab-btn.active {
             background: var(--bg-card); color: var(--accent-primary); border: 1px solid var(--accent-primary);
@@ -227,23 +252,23 @@
         
         .filter-row { display: flex; gap: 3px; margin-bottom: 6px; }
         .filter-btn {
-            flex: 1; background: var(--bg-subcard); border: 1px solid #2a2a2a; color: #888;
-            padding: 4px; border-radius: 4px; font-size: 9px; font-weight: bold; cursor: pointer; text-align: center;
+            flex: 1; background: var(--bg-subcard); border: 1px solid rgba(255,255,255,0.06); color: #888;
+            padding: 4px; border-radius: 4px; font-size: 9px; font-weight: bold; cursor: pointer; text-align: center; outline: none;
         }
-        .filter-btn.active { background: #252525; color: #3498db; border-color: #3498db; }
+        .filter-btn.active { background: var(--bg-card); color: var(--accent-primary); border-color: var(--accent-primary); }
         
         .list-header { display: flex; justify-content: space-between; align-items: center; margin: 4px 0 6px 0; gap: 4px; }
         .list-title { font-size: 12px; font-weight: bold; color: var(--accent-primary); text-shadow: none; }
         .header-controls { display: flex; gap: 4px; align-items: center; }
-        .btn-update {
-            background: #2a2a2a; border: 1px solid #3d3d3d; color: #ccc; padding: 4px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: bold;
+        .btn-update, .btn-compact-toggle {
+            background: var(--bg-subcard); border: 1px solid rgba(255,255,255,0.1); color: #ccc; padding: 4px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; height: 26px; outline: none;
         }
         .btn-update:disabled { opacity: 0.6; cursor: not-allowed; }
         
         .fav-container { display: flex; flex-direction: column; gap: 6px; }
         .fav-card {
-            background: var(--bg-subcard); border: 1px solid #2a2a2a; border-radius: var(--border-radius); padding: 6px 8px; display: flex; flex-direction: column; gap: 4px;
-            box-shadow: var(--neon-glow-border); opacity: var(--card-opacity);
+            background: var(--bg-subcard); border: 1px solid rgba(255,255,255,0.06); border-radius: var(--border-radius); padding: 6px 8px; display: flex; flex-direction: column; gap: 4px;
+            opacity: var(--card-opacity);
         }
         .fav-card.compact { padding: 4px 8px; gap: 2px; }
         .fav-card.compact .sprite-box { width: 26px; height: 26px; }
@@ -260,23 +285,23 @@
         .badge-offline { background: rgba(149, 165, 166, 0.2); color: #95a5a6; border: 1px solid #7f8c8d; }
         .badge-deleted { background: rgba(231, 76, 60, 0.25); color: #e74c3c; border: 1px solid #e74c3c; font-size: 7px; }
 
+        .bot-stamina-badge {
+            font-size: 8px; font-weight: bold; padding: 2px 5px; border-radius: 3px; margin-top: 2px; display: inline-block; white-space: nowrap;
+            cursor: pointer; transition: transform 0.15s, opacity 0.15s;
+        }
+        .bot-stamina-badge:hover { opacity: 0.85; transform: scale(1.03); }
+        .bot-stamina-badge.recharging { background: rgba(168, 50, 50, 0.35); color: #ff8787; border: 1px solid rgba(231,76,60,0.5); }
+        .bot-stamina-badge.ready { background: rgba(46, 204, 113, 0.2); color: #2ecc71; border: 1px solid #2ecc71; }
+
         .fav-actions { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
         .btn-action {
-            background: #252525; border: 1px solid #3d3d3d; color: #ccc; cursor: pointer; font-size: 10px; padding: 3px 6px; border-radius: 4px; text-align: center;
+            background: var(--bg-card); border: 1px solid rgba(255,255,255,0.1); color: #ccc; cursor: pointer; font-size: 10px; padding: 3px 6px; border-radius: 4px; text-align: center; outline: none;
         }
         .btn-guildstats { background: rgba(187, 134, 252, 0.15); border-color: var(--accent-primary); color: var(--accent-primary); font-weight: bold; }
         .btn-guildstats:hover { background: rgba(187, 134, 252, 0.3); }
         .btn-tibspy { background: rgba(52, 152, 219, 0.15); border-color: #3498db; color: #3498db; font-weight: bold; }
         .btn-tibspy:hover { background: rgba(52, 152, 219, 0.3); }
         .btn-deaths-action { min-width: 44px; }
-        
-        .char-note-container {
-            display: none; background: var(--bg-body); border: 1px dashed #444; border-radius: 4px; padding: 4px 6px; margin-top: 2px;
-        }
-        .char-note-container.open { display: block; }
-        .char-note-container input {
-            width: 100%; background: #181818; border: 1px solid #333; color: var(--accent-secondary); font-size: 10px; padding: 4px 6px; border-radius: 3px; outline: none;
-        }
 
         .deaths-box-wrapper {
             display: none;
@@ -285,10 +310,10 @@
         }
         .deaths-box {
             background: var(--bg-body); 
-            border: 1px solid #444;
+            border: 1px solid rgba(255,255,255,0.1);
             border-radius: var(--border-radius);
             padding: 6px; 
-            max-height: 280px; /* <--- AUMENTADO PARA MOSTRAR APROXIMADAMENTE 6 MUERTES A LA VEZ */
+            max-height: 280px; 
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
         }
@@ -296,7 +321,7 @@
             position: absolute;
             right: 8px;
             background: rgba(25, 25, 25, 0.85);
-            border: 1px solid #555;
+            border: 1px solid rgba(255,255,255,0.15);
             color: var(--accent-primary);
             font-size: 11px;
             font-weight: bold;
@@ -313,42 +338,39 @@
             -webkit-touch-callout: none;
             touch-action: manipulation;
             transition: background 0.15s, transform 0.1s;
+            outline: none;
         }
         .mini-scroll-btn:active {
-            background: #333;
+            background: var(--bg-subcard);
             transform: scale(0.92);
         }
-        .mini-scroll-btn.top {
-            top: 6px;
-        }
-        .mini-scroll-btn.bottom {
-            bottom: 6px;
-        }
+        .mini-scroll-btn.top { top: 6px; }
+        .mini-scroll-btn.bottom { bottom: 6px; }
 
         .death-row {
-            font-size: 10px; color: #ff8787; margin-bottom: 4px; border-bottom: 1px dashed #222; padding-bottom: 4px; display: flex; align-items: center; gap: 8px;
+            font-size: 10px; color: #ff8787; margin-bottom: 4px; border-bottom: 1px dashed rgba(255,255,255,0.06); padding-bottom: 4px; display: flex; align-items: center; gap: 8px;
         }
         .death-icon {
             width: 38px; height: 38px; object-fit: contain; flex-shrink: 0; background: rgba(0, 0, 0, 0.4);
-            border-radius: 4px; border: 1px solid #333; padding: 2px; cursor: pointer;
+            border-radius: 4px; border: 1px solid rgba(255,255,255,0.1); padding: 2px; cursor: pointer;
         }
-        .death-icon:hover { border-color: #3498db; }
+        .death-icon:hover { border-color: var(--accent-primary); }
         .death-time { font-size: 9px; color: #888; font-weight: bold; margin-bottom: 1px; }
-        .clickable-player { color: #3498db; text-decoration: underline; cursor: pointer; font-weight: bold; }
+        .clickable-player { color: var(--accent-primary); text-decoration: underline; cursor: pointer; font-weight: bold; }
         
         .online-player-row {
-            background: var(--bg-subcard); border: 1px solid #2a2a2a; border-radius: var(--border-radius); padding: 8px 10px;
+            background: var(--bg-subcard); border: 1px solid rgba(255,255,255,0.06); border-radius: var(--border-radius); padding: 8px 10px;
             display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; transition: background 0.2s;
-            box-shadow: var(--neon-glow-border); opacity: var(--card-opacity);
+            opacity: var(--card-opacity);
         }
-        .online-player-row:hover { background: #222; }
-        .online-player-name { font-weight: bold; color: #3498db; font-size: 12px; cursor: pointer; }
-        .online-player-name:hover { text-decoration: underline; color: #5dade2; }
+        .online-player-row:hover { background: var(--bg-card); }
+        .online-player-name { font-weight: bold; color: var(--accent-primary); font-size: 12px; cursor: pointer; }
+        .online-player-name:hover { text-decoration: underline; opacity: 0.8; }
         .online-player-info { font-size: 10px; color: #ccc; font-weight: bold; text-align: right; }
 
         .noti-item, .ticker-list-item {
-            background: var(--bg-subcard); border: 1px solid #2a2a2a; border-left: 3px solid var(--tab-news-color); border-radius: var(--border-radius); padding: 10px 12px; margin-bottom: 8px; font-size: 10px; word-break: break-word; overflow-wrap: anywhere;
-            box-shadow: var(--neon-glow-border); opacity: var(--card-opacity);
+            background: var(--bg-subcard); border: 1px solid rgba(255,255,255,0.06); border-left: 3px solid var(--tab-news-color); border-radius: var(--border-radius); padding: 10px 12px; margin-bottom: 8px; font-size: 10px; word-break: break-word; overflow-wrap: anywhere;
+            opacity: var(--card-opacity);
         }
         .noti-item.death { border-left-color: #e74c3c; }
         .noti-item.level { border-left-color: #2ecc71; }
@@ -357,12 +379,12 @@
         .empty-msg { color: #666; font-size: 10px; text-align: center; padding: 15px; font-style: italic; }
         
         .world-card {
-            background: var(--bg-subcard); border: 1px solid #2a2a2a; border-radius: var(--border-radius); padding: 8px 10px;
+            background: var(--bg-subcard); border: 1px solid rgba(255,255,255,0.06); border-radius: var(--border-radius); padding: 8px 10px;
             display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; transition: background 0.2s; flex-wrap: wrap; gap: 6px;
-            box-shadow: var(--neon-glow-border); opacity: var(--card-opacity);
+            opacity: var(--card-opacity);
         }
-        .world-card.fav-world { border-color: var(--accent-secondary); background: #1a1812; }
-        .world-card:hover { background: #222; }
+        .world-card.fav-world { border-color: var(--accent-secondary); background: var(--bg-card); }
+        .world-card:hover { background: var(--bg-card); }
         .world-info { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 120px; }
         .world-name-row { display: flex; align-items: center; gap: 5px; }
         .world-name { font-weight: bold; color: #fff; font-size: 12px; }
@@ -371,44 +393,33 @@
             font-size: 7px; font-weight: bold; padding: 1px 3px; border-radius: 3px; text-transform: uppercase;
         }
         .world-type { font-size: 9px; color: #e67e22; text-transform: uppercase; font-weight: bold; }
+        .world-region { font-size: 8px; color: #777; font-weight: normal; margin-top: 1px; }
         .world-count {
-            background: rgba(52, 152, 219, 0.2); color: #3498db; border: 1px solid #3498db; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer;
+            background: rgba(52, 152, 219, 0.2); color: var(--accent-primary); border: 1px solid var(--accent-primary); padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer;
         }
 
-        .tools-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
-        .tool-card {
-            background: var(--bg-subcard); border: 1px solid #2a2a2a; border-left: 3px solid var(--tab-tools-color); border-radius: var(--border-radius); padding: 10px; text-decoration: none; color: #fff; display: flex; flex-direction: column; gap: 2px; transition: background 0.2s;
-            box-shadow: var(--neon-glow-border); opacity: var(--card-opacity);
-        }
-        .tool-card:hover { background: #222; }
-        .tool-title { font-weight: bold; font-size: 11px; color: var(--accent-primary); text-shadow: none; }
-        .tool-desc { font-size: 9px; color: #888; }
-        
         .theme-section {
-            background: var(--bg-card); border: 1px solid #333; border-radius: var(--border-radius); padding: 10px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 8px;
-            box-shadow: var(--neon-glow-border);
+            background: var(--bg-card); border: 1px solid rgba(255,255,255,0.08); border-radius: var(--border-radius); padding: 10px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 8px;
         }
-        .theme-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+        .theme-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
         .theme-preset-card {
-            background: var(--bg-subcard); border: 1px solid #333; border-radius: 6px; padding: 8px; text-align: center; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: transform 0.15s, border-color 0.15s;
+            background: var(--bg-subcard); border: 1px solid rgba(255,255,255,0.06); border-radius: 6px; padding: 8px; text-align: center; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: transform 0.15s, border-color 0.15s;
         }
         .theme-preset-card:hover, .theme-preset-card.active { border-color: var(--accent-primary); transform: translateY(-2px); }
         .theme-preview-dots { display: flex; gap: 3px; margin-top: 2px; }
         .dot { width: 10px; height: 10px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2); }
         .theme-label { font-size: 9px; font-weight: bold; color: var(--text-main); }
 
-        .custom-color-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 10px; }
-
         .market-modal-content {
             background: var(--bg-card); border: 1px solid #2ecc71; padding: 12px; border-radius: var(--border-radius);
             width: 100%; max-width: 400px; max-height: 85vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; position: relative;
         }
         .market-item-row {
-            display: flex; align-items: center; justify-content: space-between; border-bottom: 1px dashed #333; padding: 6px 0; font-size: 11px; gap: 8px;
+            display: flex; align-items: center; justify-content: space-between; border-bottom: 1px dashed rgba(255,255,255,0.1); padding: 6px 0; font-size: 11px; gap: 8px;
         }
         .market-item-row:last-child { border-bottom: none; }
         .market-item-left { display: flex; align-items: center; gap: 8px; overflow: hidden; }
-        .market-item-img { width: 32px; height: 32px; object-fit: contain; background: rgba(0,0,0,0.4); border-radius: 4px; border: 1px solid #333; padding: 2px; flex-shrink: 0; }
+        .market-item-img { width: 32px; height: 32px; object-fit: contain; background: rgba(0,0,0,0.4); border-radius: 4px; border: 1px solid rgba(255,255,255,0.1); padding: 2px; flex-shrink: 0; }
         .market-val-sell { color: #e74c3c; font-weight: bold; }
         .market-val-buy { color: #2ecc71; font-weight: bold; }
 
@@ -420,53 +431,318 @@
         .modal-content {
             background: var(--bg-card); border: 1px solid var(--accent-primary); padding: 10px; border-radius: var(--border-radius); width: 100%;
             max-width: 400px; max-height: 85vh; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; touch-action: pan-y; -webkit-overflow-scrolling: touch;
-            box-shadow: var(--neon-glow-border);
         }
         .modal-title { font-size: 12px; font-weight: bold; color: var(--accent-primary); text-shadow: none; }
         .modal-content textarea {
-            width: 100%; height: 140px; background: var(--bg-body); color: #fff; border: 1px solid #444; border-radius: 4px; font-size: 11px; padding: 6px; resize: vertical; overflow-wrap: anywhere;
+            width: 100%; height: 140px; background: var(--bg-body); color: #fff; border: 1px solid rgba(255,255,255,0.12); border-radius: 4px; font-size: 11px; padding: 6px; resize: vertical; overflow-wrap: anywhere; outline: none;
         }
         .modal-buttons { display: flex; gap: 5px; }
         .modal-buttons button {
-            flex: 1; padding: 8px 6px; font-size: 11px; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; min-height: 36px;
+            flex: 1; padding: 8px 6px; font-size: 11px; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; min-height: 36px; outline: none;
         }
-        .btn-modal-action { background: var(--accent-primary); color: #121212; box-shadow: var(--neon-glow-primary); }
+        .btn-modal-action { background: var(--accent-primary); color: #121212; }
         .btn-modal-close { background: #444; color: #fff; }
         
         .wiki-modal-content {
-            background: var(--bg-card); border: 1px solid #3498db; padding: 10px 12px; border-radius: var(--border-radius);
+            background: var(--bg-card); border: 1px solid var(--accent-primary); padding: 10px 12px; border-radius: var(--border-radius);
             width: 100%; max-width: 400px; max-height: 85vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; position: relative; touch-action: pan-y; -webkit-overflow-scrolling: touch;
         }
-        .wiki-header { display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #333; padding-bottom: 6px; padding-right: 20px; }
+        .wiki-header { display: flex; align-items: center; gap: 8px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 6px; padding-right: 20px; }
         .wiki-img {
-            width: 50px; height: 50px; object-fit: contain; background: rgba(0,0,0,0.4); border-radius: 4px; border: 1px solid #444; padding: 2px; flex-shrink: 0;
+            width: 50px; height: 50px; object-fit: contain; background: rgba(0,0,0,0.4); border-radius: 4px; border: 1px solid rgba(255,255,255,0.1); padding: 2px; flex-shrink: 0;
         }
         .wiki-section-title {
-            font-size: 10px; font-weight: bold; color: #3498db; text-transform: uppercase; margin-top: 2px; border-bottom: 1px dashed #333; padding-bottom: 1px;
+            font-size: 10px; font-weight: bold; color: var(--accent-primary); text-transform: uppercase; margin-top: 2px; border-bottom: 1px dashed rgba(255,255,255,0.08); padding-bottom: 1px;
         }
         .wiki-info-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 10px; background: #161616; padding: 6px; border-radius: 4px; border: 1px solid #2a2a2a;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 10px; background: var(--bg-subcard); padding: 6px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.06);
         }
         .wiki-stat-item { display: flex; flex-direction: column; gap: 1px; }
         .wiki-stat-label { font-size: 8px; color: #888; text-transform: uppercase; font-weight: bold; }
         .wiki-stat-val { color: #fff; font-weight: bold; }
         .wiki-full-row {
-            background: #161616; padding: 6px; border-radius: 4px; border: 1px solid #2a2a2a; font-size: 10px; display: flex; flex-direction: column; gap: 1px;
+            background: var(--bg-subcard); padding: 6px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.06); font-size: 10px; display: flex; flex-direction: column; gap: 1px;
         }
         .elements-grid {
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; background: #161616; padding: 6px; border-radius: 4px; border: 1px solid #2a2a2a; font-size: 9px; text-align: center;
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; background: var(--bg-subcard); padding: 6px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.06); font-size: 9px; text-align: center;
         }
-        .elem-box { background: #222; padding: 3px; border-radius: 3px; display: flex; flex-direction: column; align-items: center; }
+        .elem-box { background: var(--bg-card); padding: 3px; border-radius: 3px; display: flex; flex-direction: column; align-items: center; }
         .elem-strong { color: #2ecc71; font-weight: bold; }
         .elem-weak { color: #e74c3c; font-weight: bold; }
         .elem-neutral { color: #aaa; font-weight: bold; }
         .loot-box-container {
-            background: #161616; border: 1px solid #2a2a2a; border-radius: 4px; padding: 6px; font-size: 10px; color: var(--accent-secondary); max-height: 110px; overflow-y: auto; line-height: 1.3; font-weight: bold;
+            background: var(--bg-subcard); border: 1px solid rgba(255,255,255,0.06); border-radius: 4px; padding: 6px; font-size: 10px; color: var(--accent-secondary); max-height: 110px; overflow-y: auto; line-height: 1.3; font-weight: bold;
         }
 
         .inline-creature-result {
-            background: #161616; border: 1px solid #3498db; border-radius: var(--border-radius); padding: 10px; margin-top: 8px; display: flex; flex-direction: column; gap: 6px;
+            background: var(--bg-subcard); border: 1px solid var(--accent-primary); border-radius: var(--border-radius); padding: 10px; margin-top: 8px; display: flex; flex-direction: column; gap: 6px;
         }
+
+        #gloomsFullScreenOverlay, #accountsFullScreenOverlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            background: var(--bg-body);
+            z-index: 5000;
+            overflow-y: auto;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        #gloomsFullScreenOverlay.open, #accountsFullScreenOverlay.open { display: block; }
+        .glooms-app-container { display: flex; flex-direction: column; gap: 8px; max-width: 480px; margin: 0 auto; }
+        .glooms-header {
+            background: var(--bg-subcard); padding: 8px 10px; border-radius: var(--border-radius); border: 1px solid rgba(255,255,255,0.06);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .glooms-title-group { display: flex; align-items: center; gap: 8px; }
+        .glooms-creature-icon { width: 36px; height: 36px; object-fit: contain; image-rendering: pixelated; }
+        .glooms-grand-total-box { display: flex; align-items: center; gap: 6px; }
+        .glooms-grand-total-title { font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: #888; }
+        .glooms-grand-total-value {
+            font-size: 14px; font-weight: bold; color: #4ade80; cursor: pointer; transition: color 0.15s, transform 0.1s;
+        }
+        .glooms-grand-total-value:hover { color: #86efac; text-decoration: underline; transform: scale(1.05); }
+        .glooms-pc-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+        .glooms-pc-card {
+            background: var(--bg-subcard); border: 1px solid rgba(255,255,255,0.06); border-radius: var(--border-radius); padding: 6px 8px;
+            display: flex; flex-direction: column; gap: 4px;
+        }
+        .glooms-pc-header {
+            display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 3px;
+        }
+        .glooms-pc-title {
+            background: transparent; border: none; color: #fff; font-weight: bold; font-size: 11px; width: 75px; outline: none;
+        }
+        .glooms-pc-title:focus { border-bottom: 1px solid var(--accent-primary); }
+        .glooms-pc-subtotal { font-size: 12px; font-weight: bold; color: var(--accent-primary); }
+        .glooms-input-wrapper { display: flex; gap: 4px; align-items: center; }
+        .glooms-input-wrapper input {
+            width: 100%; background: var(--bg-body); border: 1px solid rgba(255,255,255,0.12); color: #fff; padding: 5px;
+            border-radius: 4px; font-size: 11px; text-align: center; outline: none;
+        }
+        .glooms-input-wrapper input:focus { border-color: var(--accent-primary); }
+        .glooms-buttons-stack { display: flex; flex-direction: column; gap: 2px; }
+        .glooms-btn-action {
+            background: #0f766e; color: white; border: none; width: 20px; height: 15px; border-radius: 2px; font-weight: bold; font-size: 9px;
+            cursor: pointer; display: flex; justify-content: center; align-items: center; outline: none;
+        }
+        .glooms-btn-action.minus { background: #991b1b; }
+        .glooms-btn-action:hover { opacity: 0.85; }
+        .glooms-pc-history {
+            height: 50px; overflow-y: auto; background: var(--bg-body); border-radius: 4px; padding: 3px 5px; font-size: 9px;
+            display: flex; flex-direction: column; gap: 2px;
+        }
+        .glooms-pc-history::-webkit-scrollbar { width: 3px; }
+        .glooms-pc-history::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+        .glooms-history-item { display: flex; justify-content: space-between; color: #ccc; border-bottom: 1px solid rgba(255,255,255,0.03); padding-bottom: 1px; }
+        .glooms-history-item.positive { color: #4ade80; }
+        .glooms-history-item.negative { color: #f87171; }
+        .glooms-history-item .time { color: #777; }
+        .glooms-footer-actions { display: flex; justify-content: space-between; align-items: center; }
+        .glooms-btn-finish {
+            background: #2563eb; color: #ffffff; border: none; padding: 5px 12px; border-radius: 4px; font-weight: bold; font-size: 10px; cursor: pointer; outline: none;
+        }
+        .glooms-btn-finish:hover { background: #1d4ed8; }
+        .glooms-btn-reset {
+            background: #333; color: #aaa; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 10px; outline: none;
+        }
+        .glooms-btn-reset:hover { background: #dc2626; color: #fff; }
+        .glooms-daily-panel {
+            background: var(--bg-subcard); border: 1px solid rgba(255,255,255,0.06); border-radius: var(--border-radius); padding: 6px 8px;
+            display: flex; flex-direction: column; gap: 5px;
+        }
+        .glooms-daily-header {
+            display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 3px;
+            font-size: 10px; font-weight: bold; color: #888;
+        }
+        .glooms-daily-list { display: flex; flex-direction: column; gap: 3px; max-height: 120px; overflow-y: auto; }
+        .glooms-daily-list::-webkit-scrollbar { width: 3px; }
+        .glooms-daily-list::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+        .glooms-daily-row {
+            background: var(--bg-body); border: 1px solid rgba(255,255,255,0.06); border-radius: 3px; padding: 4px 6px; font-size: 9px; color: #ccc;
+            display: flex; flex-direction: column; gap: 2px;
+        }
+        .glooms-daily-row-top {
+            display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.03); padding-bottom: 2px;
+        }
+        .glooms-daily-row .date { color: var(--accent-primary); font-weight: bold; }
+        .glooms-daily-row .pcs-info { color: #888; display: flex; justify-content: space-between; text-align: center; gap: 2px; }
+        .glooms-daily-row .pcs-info span { background: var(--bg-card); padding: 1px 3px; border-radius: 2px; flex: 1; white-space: nowrap; }
+        .glooms-daily-row .pcs-info strong { color: #fff; font-weight: bold; }
+        .glooms-daily-row .total { color: #4ade80; font-weight: bold; cursor: pointer; }
+        .glooms-btn-clear-history { background: transparent; border: none; color: #777; font-size: 9px; cursor: pointer; outline: none; }
+        .glooms-btn-clear-history:hover { color: #f87171; }
+        .glooms-calc-panel {
+            background: var(--bg-subcard); border: 1px solid rgba(255,255,255,0.06); border-radius: var(--border-radius); padding: 6px 8px;
+            display: flex; flex-direction: column; gap: 5px;
+        }
+        .glooms-calc-header { font-size: 10px; font-weight: bold; color: #888; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 3px; }
+        .glooms-calc-inputs { display: grid; grid-template-columns: 1fr 1fr 1.1fr; gap: 5px; align-items: center; }
+        .glooms-calc-field { display: flex; flex-direction: column; gap: 1px; }
+        .glooms-calc-field label { font-size: 8px; color: #777; text-transform: uppercase; font-weight: bold; }
+        .glooms-calc-field input {
+            background: var(--bg-body); border: 1px solid rgba(255,255,255,0.12); color: #fff; padding: 4px; border-radius: 3px;
+            font-size: 11px; text-align: center; outline: none; width: 100%;
+        }
+        .glooms-calc-field input:focus { border-color: var(--accent-primary); }
+        .glooms-calc-result { background: var(--bg-body); border: 1px solid rgba(255,255,255,0.06); border-radius: 3px; padding: 4px; text-align: center; }
+        .glooms-calc-result-label { font-size: 8px; color: #777; text-transform: uppercase; font-weight: bold; }
+        .glooms-calc-result-value { font-size: 11px; font-weight: bold; color: var(--accent-secondary); }
+
+        /* Estilos ultra limpios y compactos para Control Cuentas Tibia */
+        .acc-app-wrap { max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; gap: 6px; }
+        .acc-top-bar {
+            display: flex; gap: 4px; margin-bottom: 2px; background: var(--bg-subcard);
+            padding: 4px 6px; border-radius: var(--border-radius); border: 1px solid rgba(255,255,255,0.06); align-items: center; position: relative;
+        }
+        .acc-top-bar input {
+            flex: 1; min-width: 0; padding: 5px 8px; border-radius: 4px;
+            border: 1px solid rgba(255,255,255,0.12); background: var(--bg-body); color: #fff; font-size: 11px; outline: none;
+        }
+        .acc-top-bar button.acc-btn-add {
+            min-width: 32px; padding: 5px 8px; background: var(--accent-primary); color: #121212;
+            font-weight: bold; border: none; border-radius: 4px; font-size: 13px; cursor: pointer;
+        }
+        .acc-top-bar .acc-icon-btn {
+            background: var(--bg-card); border: 1px solid rgba(255,255,255,0.1); color: #ccc;
+            padding: 5px 6px; border-radius: 4px; font-size: 11px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; min-width: 30px; outline: none;
+        }
+        .acc-top-bar .acc-icon-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+        .acc-pc-popup {
+            display: none; position: fixed; background: var(--bg-card); border: 1px solid var(--accent-primary);
+            border-radius: var(--border-radius); box-shadow: 0 6px 16px rgba(0,0,0,.8); z-index: 6100;
+            flex-direction: column; overflow: hidden; min-width: 145px;
+        }
+        .acc-pc-popup.open { display: flex; }
+        .acc-pc-popup-item {
+            background: none; border: none; color: var(--text-main); text-align: left;
+            padding: 8px 10px; font-size: 11px; cursor: pointer; display: flex;
+            align-items: center; justify-content: space-between; width: 100%; gap: 6px; font-weight: bold;
+        }
+        .acc-pc-popup-item:hover { background: var(--bg-subcard); color: var(--accent-primary); }
+        .acc-pc-popup-item.active-pc { color: var(--accent-primary); font-weight: bold; }
+        .acc-pc-in-use { font-size: 9px; color: #888; font-style: italic; }
+
+        .acc-bot-selector-popup {
+            display: none; position: fixed; background: var(--bg-card); border: 1px solid var(--accent-primary);
+            border-radius: var(--border-radius); box-shadow: 0 8px 22px rgba(0,0,0,0.85); z-index: 6500;
+            flex-direction: column; max-height: 250px; overflow-y: auto; min-width: 190px;
+        }
+        .acc-bot-selector-popup.open { display: flex; }
+        .acc-bot-selector-item {
+            background: none; border: none; border-bottom: 1px solid rgba(255,255,255,0.05); color: var(--text-main); text-align: left;
+            padding: 7px 9px; font-size: 10.5px; cursor: pointer; display: flex; flex-direction: column; gap: 1px; width: 100%;
+        }
+        .acc-bot-selector-item:last-child { border-bottom: none; }
+        .acc-bot-selector-item:hover { background: var(--bg-subcard); color: var(--accent-primary); }
+        .acc-bot-selector-name { font-weight: bold; color: var(--accent-primary); }
+        .acc-bot-selector-meta { font-size: 8.5px; color: #aaa; }
+
+        .acc-active-servers-bar {
+            display: flex; justify-content: center; flex-wrap: wrap; gap: 3px;
+            overflow-x: auto; margin-bottom: 4px; min-height: 20px;
+        }
+        .acc-active-tag {
+            background: var(--accent-secondary); color: #000; font-weight: bold; font-size: 9.5px;
+            padding: 3px 6px; border-radius: 3px; white-space: nowrap; cursor: pointer;
+            border: 0; min-height: 22px;
+        }
+        .acc-no-active-tag { font-size: 9.5px; color: #666; font-style: italic; }
+        
+        .acc-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; align-items: start; }
+        .acc-column { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+        .acc-card {
+            background: var(--bg-subcard); border: 1px solid rgba(255,255,255,0.06); border-radius: var(--border-radius);
+            padding: 4px; display: flex; flex-direction: column; height: fit-content;
+            min-width: 0; transition: border-color .2s ease;
+        }
+        .acc-card.active-highlight {
+            border-color: var(--accent-secondary) !important;
+            box-shadow: 0 0 0 2px rgba(241,196,15,.35), 0 0 18px rgba(241,196,15,.28);
+            animation: activeCardPulse 1.1s ease-in-out 2;
+        }
+        @keyframes activeCardPulse {
+            0%, 100% { box-shadow: 0 0 0 2px rgba(241,196,15,.25), 0 0 10px rgba(241,196,15,.18); }
+            50% { box-shadow: 0 0 0 4px rgba(241,196,15,.55), 0 0 22px rgba(241,196,15,.42); }
+        }
+        
+        .acc-card-header {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #20152e; border: 1px solid #4a3070; border-radius: 3px;
+            padding: 2px 4px; margin: -1px -1px 3px;
+            color: #e0c4ff; user-select: none; gap: 3px;
+            box-shadow: inset 3px 0 0 var(--accent-primary);
+            cursor: pointer;
+        }
+        .acc-card.collapsed { padding: 3px 4px; }
+        .acc-card.collapsed .acc-card-header { margin-bottom: 0; }
+        
+        .acc-drag-zone {
+            flex: 1; min-width: 0; text-align: left; font-size: 10.5px; font-weight: bold;
+            overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+            padding: 1px; user-select: none; color: #fff;
+        }
+        .acc-server-title-wrap { display: flex; align-items: center; gap: 3px; flex: 1; min-width: 0; }
+        
+        .acc-pc-badge { flex: 0 0 auto; color: #121212; background: var(--accent-primary); font-size: 7.5px; font-weight: bold; line-height: 1; white-space: nowrap; padding: 2px 3px; border-radius: 2px; }
+        .acc-email-count { flex: 0 0 auto; color: #bbb; font-size: 8.5px; line-height: 1; white-space: nowrap; padding: 2px 3px; border: 1px solid rgba(255,255,255,0.1); border-radius: 2px; background: var(--bg-card); }
+        
+        .acc-header-actions { display: flex; gap: 2px; align-items: center; }
+        .acc-header-actions button {
+            background: none; border: none; font-size: 11px; cursor: pointer;
+            padding: 1px 2px; font-weight: bold; min-width: 16px; min-height: 16px; color: #e74c3c;
+        }
+        
+        .acc-card-body { display: flex; flex-direction: column; min-width: 0; gap: 3px; }
+        .acc-card.collapsed .acc-card-body { display: none !important; }
+        
+        .acc-row {
+            background: var(--bg-body); padding: 3px 4px; border-radius: 3px;
+            border: 1px solid rgba(255,255,255,0.06); min-width: 0;
+            display: flex; flex-direction: column; gap: 2px;
+        }
+        .acc-row.acc-row-highlight {
+            border-color: var(--accent-secondary) !important;
+            box-shadow: 0 0 10px rgba(241,196,15,0.4);
+            animation: activeCardPulse 1.1s ease-in-out 2;
+        }
+        .acc-row-top { display: flex; align-items: center; gap: 3px; min-width: 0; }
+        .acc-row input {
+            flex: 1; min-width: 0; padding: 3px 6px; background: #141414;
+            border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 2px; font-size: 10px;
+            outline: none; height: 22px;
+        }
+        .acc-row input:focus { border-color: var(--accent-primary); }
+
+        .acc-bot-link-btn {
+            flex: 0 0 auto; max-width: 100px; padding: 2px 5px; background: #181818;
+            border: 1px dashed rgba(255,255,255,0.2); color: var(--accent-primary); border-radius: 2px; font-size: 8.5px;
+            cursor: pointer; text-align: left; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+            outline: none; height: 22px; display: inline-flex; align-items: center; justify-content: space-between; gap: 2px;
+        }
+        .acc-bot-link-btn:hover { background: #222; border-color: var(--accent-primary); }
+
+        .acc-actions { display: flex; gap: 2px; }
+        .acc-actions button {
+            flex: 1; min-width: 0; padding: 2px 4px; font-size: 8.5px;
+            background: var(--bg-card); color: #aaa; border: 1px solid rgba(255,255,255,0.08); border-radius: 2px;
+            cursor: pointer; font-weight: bold; min-height: 20px; outline: none;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .acc-actions button.btn-act { background: var(--accent-secondary); color: #000; border-color: var(--accent-secondary); }
+        .acc-actions button.btn-sta { background: #331515; color: #ff8787; border-color: #7d2828; }
+
+        .acc-priority-btn {
+            flex: 0 0 14px; width: 14px; height: 16px; padding: 0; margin: 0;
+            display: inline-flex; align-items: center; justify-content: center;
+            border: 0; border-radius: 2px; background: transparent; color: #d8b8ff;
+            font-size: 9px; line-height: 1; cursor: pointer; user-select: none;
+        }
+        .acc-priority-btn:hover { background: rgba(187,134,252,0.15); color: #fff; }
     </style>
 </head>
 <body onclick="closeMenuOnClickOutside(event)">
@@ -483,38 +759,128 @@
             <div style="position: relative;">
                 <button class="menu-btn" onclick="toggleMenu(event)">☰</button>
                 <div id="dropdownMenu" class="dropdown-menu">
-                    <button class="dropdown-item" onclick="AppStorage.openExportModal()">💾 Guardar JSON</button>
-                    <button class="dropdown-item" onclick="AppStorage.openImportModal()">📂 Cargar JSON</button>
-                    <button class="dropdown-item" style="color:var(--accent-primary); border-top:1px solid #333;" onclick="AppNavigation.switchCategory('theme')">🎨 Personalizar Apariencia</button>
+                    <button class="dropdown-item" onclick="AppStorage.openExportModal()">💾 Guardar Respaldo Unificado</button>
+                    <button class="dropdown-item" onclick="AppStorage.openImportModal()">📂 Cargar Respaldo Unificado</button>
+                    <button class="dropdown-item" style="color:var(--accent-primary); border-top:1px solid rgba(255,255,255,0.08);" onclick="AppNavigation.switchCategory('theme')">🎨 Personalizar Apariencia</button>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Modales Principales de Respaldo Unificado -->
     <div id="exportModal" class="modal" role="dialog">
         <div class="modal-content">
-            <div id="exportTitle" class="modal-title">Respaldo:</div>
+            <div id="exportTitle" class="modal-title">Respaldo Unificado:</div>
             <textarea id="exportTextarea" readonly spellcheck="false"></textarea>
             <div class="modal-buttons">
                 <button class="btn-modal-action" id="saveBackupFileBtn" type="button">Guardar .json</button>
                 <button class="btn-modal-action" id="copyExportBtn" type="button">Copiar texto</button>
                 <button class="btn-modal-close" onclick="closeModal('exportModal')" type="button">Cerrar</button>
             </div>
-            <div style="font-size:10px; color:#888;">El archivo se guardará con la fecha actual y la extensión .json correcta.</div>
         </div>
     </div>
 
     <div id="importModal" class="modal" role="dialog">
         <div class="modal-content">
-            <div class="modal-title">Restaurar Respaldo:</div>
+            <div class="modal-title">Restaurar Respaldo Unificado:</div>
             <input id="backupFileInput" type="file" accept=".json,application/json,text/plain" style="display:none" onchange="AppStorage.handleFileSelect(event)">
             <div class="modal-buttons" style="margin-bottom:4px">
                 <button class="btn-modal-action" onclick="document.getElementById('backupFileInput').click()" type="button">📂 Elegir archivo .json</button>
             </div>
-            <textarea id="importTextarea" placeholder="O pega aquí el código JSON de respaldo..."></textarea>
+            <textarea id="importTextarea" placeholder="O pega aquí el código JSON unificado de respaldo..."></textarea>
             <div class="modal-buttons">
-                <button class="btn-modal-action" onclick="AppStorage.processImportText()" type="button" style="background:#2ecc71; color:#000">Restaurar datos</button>
+                <button class="btn-modal-action" onclick="AppStorage.processImportText()" type="button" style="background:#2ecc71; color:#000">Restaurar todo</button>
                 <button class="btn-modal-close" onclick="closeModal('importModal')" type="button">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pantalla Completa Glooms -->
+    <div id="gloomsFullScreenOverlay">
+        <div class="glooms-app-container">
+            <div class="glooms-header">
+                <div class="glooms-title-group">
+                    <button class="btn-action" onclick="closeGloomsFullScreen()" style="font-weight:bold; font-size:11px;">⬅ Volver</button>
+                    <img id="gloomsTabIcon" src="" alt="Gloom Wolf" class="glooms-creature-icon" onerror="this.onerror=null; this.src=SAFE_FALLBACK_URL;">
+                    <span style="font-size:11px; font-weight:bold; color:#4ade80;">Gloom Wolf Furs</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <div class="glooms-grand-total-box">
+                        <span class="glooms-grand-total-title">Total:</span>
+                        <span class="glooms-grand-total-value" id="gloomsGrandTotal" title="Haz clic para calcular" onclick="useGloomsGrandTotal()">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glooms-pc-grid" id="gloomsPcGrid"></div>
+
+            <div class="glooms-footer-actions">
+                <button class="glooms-btn-finish" onclick="gloomsFinishDay()">Finalizar Día</button>
+                <button class="glooms-btn-reset" onclick="gloomsResetCurrentDay()">Reiniciar Actual</button>
+            </div>
+
+            <div class="glooms-daily-panel">
+                <div class="glooms-daily-header">
+                    <span>Historial de Días</span>
+                    <button class="glooms-btn-clear-history" onclick="gloomsClearDailyRecords()">Borrar Historial</button>
+                </div>
+                <div class="glooms-daily-list" id="gloomsDailyRecordsList"></div>
+            </div>
+
+            <div class="glooms-calc-panel">
+                <div class="glooms-calc-header">Calculadora de Ganancias</div>
+                <div class="glooms-calc-inputs">
+                    <div class="glooms-calc-field">
+                        <label>Precio Unitario</label>
+                        <input type="number" id="gloomsCalcPrice" placeholder="Ej. 500" min="0" oninput="gloomsCalculateProfit()">
+                    </div>
+                    <div class="glooms-calc-field">
+                        <label>Cantidad</label>
+                        <input type="number" id="gloomsCalcQuantity" placeholder="Vacío = Total" min="0" oninput="gloomsCalculateProfit()">
+                    </div>
+                    <div class="glooms-calc-result">
+                        <div class="glooms-calc-result-label">Oro Estimado</div>
+                        <div class="glooms-calc-result-value" id="gloomsCalcResult">0 gp</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pantalla Completa Cuentas -->
+    <div id="accountsFullScreenOverlay">
+        <div class="acc-app-wrap">
+            <div class="glooms-header" style="margin-bottom:4px; padding: 6px 8px;">
+                <div class="glooms-title-group">
+                    <button class="btn-action" onclick="closeAccountsFullScreen()" style="font-weight:bold; font-size:10px; padding:3px 6px;">⬅ Volver</button>
+                    <span style="font-size:10.5px; font-weight:bold; color:var(--accent-primary);">Control Cuentas Tibia</span>
+                </div>
+            </div>
+
+            <div class="acc-top-bar">
+                <input type="text" id="accSrvName" placeholder="Servidor (Ej: Ferobra)" maxlength="80" autocomplete="off">
+                <button class="acc-btn-add" id="accAddSrv" type="button">+</button>
+                <button class="acc-icon-btn" id="accUndoBtn" type="button" title="Deshacer" disabled>⏪</button>
+                <button class="acc-icon-btn" id="accRedoBtn" type="button" title="Rehacer" disabled>⏩</button>
+                <button class="acc-icon-btn" id="accToggleCollapseAll" type="button" title="Minimizar / Expandir todos">↕️</button>
+            </div>
+
+            <!-- Menú flotante de PC para Cuentas -->
+            <div class="acc-pc-popup" id="accPcPopup">
+                <button class="acc-pc-popup-item" data-pc="">Ninguna PC</button>
+                <button class="acc-pc-popup-item" data-pc="PC1">PC 1 <span class="acc-pc-in-use" id="accUsePC1"></span></button>
+                <button class="acc-pc-popup-item" data-pc="PC2">PC 2 <span class="acc-pc-in-use" id="accUsePC2"></span></button>
+                <button class="acc-pc-popup-item" data-pc="PC3">PC 3 <span class="acc-pc-in-use" id="accUsePC3"></span></button>
+                <button class="acc-pc-popup-item" data-pc="PC4">PC 4 <span class="acc-pc-in-use" id="accUsePC4"></span></button>
+            </div>
+
+            <!-- Menú flotante para elegir el bot de la lista -->
+            <div class="acc-bot-selector-popup" id="accBotSelectorPopup"></div>
+
+            <div class="acc-active-servers-bar" id="accActiveServersBar"></div>
+            <div class="acc-grid" id="accContainer">
+                <div class="acc-column" id="accCol1"></div>
+                <div class="acc-column" id="accCol2"></div>
             </div>
         </div>
     </div>
@@ -526,7 +892,7 @@
                 <img id="wikiModalImg" class="wiki-img" src="" alt="Criatura" onerror="this.onerror=null; this.src=SAFE_FALLBACK_URL;">
                 <div style="overflow:hidden;">
                     <div class="wiki-stat-label">Tibia Fandom Wiki</div>
-                    <div id="wikiModalName" style="font-size:13px; font-weight:bold; color:#3498db;">Cargando...</div>
+                    <div id="wikiModalName" style="font-size:13px; font-weight:bold; color:var(--accent-primary);">Cargando...</div>
                 </div>
             </div>
             <div id="wikiModalBody" style="display:flex; flex-direction:column; gap:6px; max-height:65vh; overflow-y:auto; padding-right:2px;">
@@ -541,7 +907,7 @@
     <div id="marketModal" class="modal" role="dialog">
         <div class="market-modal-content">
             <button class="search-close-btn" onclick="closeModal('marketModal')" title="Cerrar">✕</button>
-            <div id="marketModalTitle" style="font-size:13px; font-weight:bold; color:#2ecc71; border-bottom:1px solid #333; padding-bottom:4px;">Market</div>
+            <div id="marketModalTitle" style="font-size:13px; font-weight:bold; color:#2ecc71; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:4px;">Market</div>
             <div id="marketModalBody" style="display:flex; flex-direction:column; gap:4px; max-height:65vh; overflow-y:auto;">
                 <div style="text-align:center; color:#888; padding:15px;">⏳ Consultando precios...</div>
             </div>
@@ -587,6 +953,7 @@
         </div>
     </div>
 
+    <!-- Cuadrícula superior con Rashid, Bestiario, Glooms y Cuentas -->
     <div class="top-symmetric-grid">
         <div class="sym-card rashid" onclick="openRashidDetails()" title="Ver ubicación de Rashid">
             <img id="rashidImg" class="sym-sprite" src="https://outfit-images.ots.me/latest_walk/animoutfit.php?id=146&addons=3&head=102&body=101&legs=122&feet=115&direction=3" alt="Rashid" onerror="this.onerror=null; this.src=SAFE_FALLBACK_URL;">
@@ -594,14 +961,19 @@
             <div id="rashidLocation" class="sym-value">Cargando...</div>
         </div>
         <div class="sym-card creatures" onclick="AppNavigation.switchCategory('creatures')" title="Bestiario">
-            <img id="bestiaryIconImg" class="sym-sprite" src="https://outfit-images.ots.me/latest/outfit.php?id=128&addons=0" alt="Ferumbras" onerror="this.onerror=null; this.src=SAFE_FALLBACK_URL;">
+            <img id="bestiaryIconImg" class="sym-sprite" src="" alt="Ferumbras" onerror="this.onerror=null; this.src=SAFE_FALLBACK_URL;">
             <div class="sym-title">Bestiario</div>
             <div class="sym-value">Wiki & Stats</div>
         </div>
-        <div class="sym-card tools" onclick="AppNavigation.switchCategory('tools')" title="Herramientas">
-            <img id="toolsIconImg" class="sym-sprite" src="https://outfit-images.ots.me/latest/outfit.php?id=128&addons=0" alt="Tools" onerror="this.onerror=null; this.src=SAFE_FALLBACK_URL;">
-            <div class="sym-title">Herramientas</div>
-            <div class="sym-value">Utilidades</div>
+        <div class="sym-card glooms" onclick="openGloomsFullScreen()" title="Gloom Wolf Furs">
+            <img id="gloomsIconImg" class="sym-sprite" src="" alt="Gloom Wolf" onerror="this.onerror=null; this.src=SAFE_FALLBACK_URL;">
+            <div class="sym-title">Glooms</div>
+            <div class="sym-value">Furs</div>
+        </div>
+        <div class="sym-card accounts" onclick="openAccountsFullScreen()" title="Control de Cuentas">
+            <img id="accountsIconImg" class="sym-sprite" src="https://item-images.ots.me/latest_otbr/3049.png" alt="Cuentas" onerror="this.onerror=null; this.src=SAFE_FALLBACK_URL;">
+            <div class="sym-title">Cuentas</div>
+            <div class="sym-value">Control</div>
         </div>
     </div>
 
@@ -629,7 +1001,6 @@
         <button id="filter-offline" class="filter-btn" onclick="AppNavigation.setFilter('offline')">🔴 Offline</button>
     </div>
 
-    <!-- SUB-FILTRO SELECTOR DE SERVIDORES (OPEN PVP / OPTIONAL PVP) -->
     <div id="worldFilterRow" class="filter-row" style="display: none;">
         <button id="world-filter-open" class="filter-btn active" onclick="setWorldTypeFilter('open')">⚔️ Open PvP</button>
         <button id="world-filter-optional" class="filter-btn" onclick="setWorldTypeFilter('optional')">🕊️ Optional PvP (No PvP)</button>
@@ -638,7 +1009,7 @@
     <div class="list-header">
         <span id="currentListTitle" class="list-title">🤖 Lista de Bots</span>
         <div class="header-controls">
-            <button id="btnCompactToggle" class="btn-update" onclick="toggleCompactMode()" title="Cambiar tamaño de vista">📱 Compacto</button>
+            <button id="btnCompactToggle" class="btn-compact-toggle" onclick="toggleCompactMode()" title="Cambiar modo compacto">📏</button>
             <button id="btnUpdateFavs" class="btn-update" onclick="CharacterManager.updateAll()" title="Actualizar todo">🔄</button>
         </div>
     </div>
@@ -652,42 +1023,40 @@
         const READ_MAINNEWS_KEY = 'tibia_read_mainnews_id_v1';
         const FAV_WORLDS_KEY = 'tibia_fav_worlds_v1';
         const COMPACT_MODE_KEY = 'tibia_compact_mode_v1';
-        const THEME_STORAGE_KEY = 'tibia_app_theme_custom_v8';
+        const THEME_STORAGE_KEY = 'tibia_app_theme_custom_v11';
         const MAX_NOTIFICATIONS = 30;
 
         const PRESET_THEMES = {
-            'tibia-dark': { name: 'Tibia Dark', bgBody: '#121212', bgCard: '#1e1e1e', bgSubcard: '#1a1a1a', primary: '#bb86fc', secondary: '#f39c12', textMain: '#e0e0e0' },
-            'oled-black': { name: 'OLED Pure', bgBody: '#000000', bgCard: '#0f0f0f', bgSubcard: '#080808', primary: '#ffffff', secondary: '#3498db', textMain: '#ffffff' },
-            'midnight-blue': { name: 'Midnight Blue', bgBody: '#0b0f19', bgCard: '#131b2e', bgSubcard: '#0d1322', primary: '#38bdf8', secondary: '#818cf8', textMain: '#f1f5f9' },
-            'charcoal-slate': { name: 'Charcoal Slate', bgBody: '#18181b', bgCard: '#27272a', bgSubcard: '#202023', primary: '#f43f5e', secondary: '#fbbf24', textMain: '#fafafa' },
-            'forest-dim': { name: 'Forest Dim', bgBody: '#09120a', bgCard: '#112214', bgSubcard: '#0d190f', primary: '#4ade80', secondary: '#facc15', textMain: '#f0fdf4' },
-            'coffee-mocha': { name: 'Coffee Mocha', bgBody: '#14100d', bgCard: '#241b16', bgSubcard: '#1c1510', primary: '#fb923c', secondary: '#f43f5e', textMain: '#fef3c7' },
-            'deep-purple': { name: 'Deep Purple', bgBody: '#100b16', bgCard: '#1d1329', bgSubcard: '#170f20', primary: '#c084fc', secondary: '#38bdf8', textMain: '#faf5ff' },
-            'crimson-night': { name: 'Crimson Night', bgBody: '#14080a', bgCard: '#241014', bgSubcard: '#1b0c0f', primary: '#fb7185', secondary: '#fbbf24', textMain: '#fff1f2' },
-            'cyber-purple': { name: 'Cyber Purple', bgBody: '#07050d', bgCard: '#130d22', bgSubcard: '#0c0817', primary: '#bf00ff', secondary: '#00ffff', textMain: '#f0e6ff' },
-            'tron-blue': { name: 'Tron Blue', bgBody: '#030a10', bgCard: '#081726', bgSubcard: '#05101a', primary: '#00d2ff', secondary: '#ff007f', textMain: '#e0f7ff' },
-            'matrix-green': { name: 'Matrix Green', bgBody: '#020d06', bgCard: '#081f10', bgSubcard: '#05140a', primary: '#00ff66', secondary: '#00ffff', textMain: '#d8ffd8' },
-            'vampire-red': { name: 'Vampire Blood', bgBody: '#140808', bgCard: '#221010', bgSubcard: '#1a0d0d', primary: '#ff0055', secondary: '#ffaa00', textMain: '#f5d6d6' },
-            'hot-pink': { name: 'Hot Pink Neon', bgBody: '#0d0208', bgCard: '#220816', bgSubcard: '#17050f', primary: '#ff1493', secondary: '#00ffcc', textMain: '#ffe4f1' },
-            'solar-flare': { name: 'Solar Flare', bgBody: '#0f0702', bgCard: '#241206', bgSubcard: '#190c04', primary: '#ff5500', secondary: '#ffee00', textMain: '#fff3e0' },
-            'royal-gold': { name: 'Royal Gold', bgBody: '#0d0a02', bgCard: '#211a06', bgSubcard: '#171204', primary: '#ffd700', secondary: '#ff4500', textMain: '#fffbe0' },
-            'frostbite': { name: 'Frostbite', bgBody: '#020a0d', bgCard: '#081c24', bgSubcard: '#051218', primary: '#00f2fe', secondary: '#4facfe', textMain: '#e0fbfc' },
-            'toxic-acid': { name: 'Toxic Acid', bgBody: '#060d02', bgCard: '#122406', bgSubcard: '#0c1804', primary: '#adff2f', secondary: '#ff00ff', textMain: '#f0ffe0' },
-            'blood-neon': { name: 'Blood Neon', bgBody: '#0f0202', bgCard: '#260606', bgSubcard: '#1a0404', primary: '#ff2a2a', secondary: '#9400d3', textMain: '#ffe6e6' },
-            'retro-arcade': { name: 'Retro Arcade', bgBody: '#050510', bgCard: '#0e0e24', bgSubcard: '#090918', primary: '#ff0055', secondary: '#00ffcc', textMain: '#ffffff' },
-            'emerald-cyber': { name: 'Emerald Cyber', bgBody: '#010d08', bgCard: '#041f14', bgSubcard: '#02140c', primary: '#00ff88', secondary: '#00ccff', textMain: '#e0fff4' },
-            'sunset-synth': { name: 'Sunset Synth', bgBody: '#0d0510', bgCard: '#200c24', bgSubcard: '#150718', primary: '#ff7700', secondary: '#ff00cc', textMain: '#ffeefc' },
-            'deep-ocean': { name: 'Deep Ocean', bgBody: '#020610', bgCard: '#0a1428', bgSubcard: '#060e1d', primary: '#3b82f6', secondary: '#06b6d4', textMain: '#e2e8f0' },
-            'cyber-yellow': { name: 'Cyber Yellow', bgBody: '#0f0f02', bgCard: '#222206', bgSubcard: '#171704', primary: '#facc15', secondary: '#ef4444', textMain: '#fef08a' },
-            'lavender-mist': { name: 'Lavender Mist', bgBody: '#0a0710', bgCard: '#171026', bgSubcard: '#100b1c', primary: '#c084fc', secondary: '#f43f5e', textMain: '#f3e8ff' }
+            'tibia-dark': { 
+                name: 'Tibia Dark (Predeterminado)', 
+                bgBody: '#121212', bgCard: '#1e1e1e', bgSubcard: '#1a1a1a', primary: '#bb86fc', secondary: '#f39c12', textMain: '#e0e0e0' 
+            },
+            'ocean-blue': { 
+                name: 'Océano Azul', 
+                bgBody: '#0b131d', bgCard: '#132235', bgSubcard: '#0f1a29', primary: '#38bdf8', secondary: '#34d399', textMain: '#f0f9ff' 
+            },
+            'crimson-red': { 
+                name: 'Rojo Carmesí', 
+                bgBody: '#180e0e', bgCard: '#2c1616', bgSubcard: '#221111', primary: '#f87171', secondary: '#fbbf24', textMain: '#fef2f2' 
+            },
+            'royal-purple': { 
+                name: 'Morado Real', 
+                bgBody: '#120d1c', bgCard: '#201633', bgSubcard: '#191028', primary: '#c084fc', secondary: '#f43f5e', textMain: '#faf5ff' 
+            },
+            'emerald-green': { 
+                name: 'Verde Esmeralda', 
+                bgBody: '#0b1712', bgCard: '#132c22', bgSubcard: '#0f221a', primary: '#34d399', secondary: '#38bdf8', textMain: '#f0fdf4' 
+            },
+            'amber-gold': { 
+                name: 'Ámbar Dorado', 
+                bgBody: '#17130b', bgCard: '#2c2313', bgSubcard: '#221b0f', primary: '#fbbf24', secondary: '#a78bfa', textMain: '#fffbeb' 
+            }
         };
 
         let currentThemeConfig = { 
             ...PRESET_THEMES['tibia-dark'], 
             borderRadius: '6px', 
-            fontScale: '12px', 
-            neonEnabled: false, 
-            neonIntensity: '3px',
+            fontScale: '12px',
             cardOpacity: '1'
         };
 
@@ -705,10 +1074,6 @@
                 let styleEl = document.getElementById('themeDynamicStyle');
                 if (!styleEl) return;
                 
-                let intensity = currentThemeConfig.neonIntensity || '3px';
-                let neonBorder = currentThemeConfig.neonEnabled ? `0 0 ${intensity} ${currentThemeConfig.primary}88, inset 0 0 2px ${currentThemeConfig.primary}44` : 'none';
-                let neonBtnGlow = currentThemeConfig.neonEnabled ? `0 0 ${intensity} ${currentThemeConfig.primary}` : 'none';
-
                 styleEl.innerHTML = `
                     :root {
                         --bg-body: ${currentThemeConfig.bgBody};
@@ -719,14 +1084,12 @@
                         --text-main: ${currentThemeConfig.textMain};
                         --border-radius: ${currentThemeConfig.borderRadius || '6px'};
                         --font-scale: ${currentThemeConfig.fontScale || '12px'};
-                        --neon-glow-primary: ${neonBtnGlow};
-                        --neon-glow-border: ${neonBorder};
-                        --neon-glow-text: none;
                         --card-opacity: ${currentThemeConfig.cardOpacity || '1'};
                         --tab-rashid-color: #3498db;
                         --tab-creature-color: #e74c3c;
-                        --tab-tools-color: #bb86fc;
                         --tab-news-color: #f39c12;
+                        --tab-glooms-color: #0f766e;
+                        --tab-accounts-color: #bb86fc;
                     }
                 `;
             },
@@ -748,26 +1111,10 @@
                     this.save();
                     if (currentCategory === 'theme') UIComponents.renderThemeTab();
                 }
-            },
-            updateCustom(key, val) {
-                currentThemeConfig[key] = val;
-                this.save();
-            },
-            toggleNeon(isChecked) {
-                currentThemeConfig.neonEnabled = isChecked;
-                this.save();
             }
         };
 
         ThemeManager.init();
-
-        const NOTIF_TEXTS = {
-            deathTitle: '☠️ MUERTE',
-            levelTitle: '🎉 NIVEL',
-            deletedTitle: '⚠️ ESTADO',
-            levelMsg: (level) => `Avanzó al Nivel ${level}`,
-            deletedMsg: 'Personaje baneado o eliminado de los registros.'
-        };
 
         let favorites = [];
         let notifications = [];
@@ -782,7 +1129,7 @@
         let sortDescOrder = true; 
         let currentFilterStatus = 'all';
         let currentNotiFilter = 'all';
-        let currentWorldType = 'open'; // 'open' o 'optional'
+        let currentWorldType = 'open';
 
         try {
             favorites = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
@@ -794,6 +1141,21 @@
             notifications = [];
             favWorlds = [];
             isCompactMode = false;
+        }
+
+        function updateCompactButtonState() {
+            let btn = document.getElementById('btnCompactToggle');
+            if (btn) {
+                btn.style.borderColor = isCompactMode ? 'var(--accent-primary)' : 'rgba(255,255,255,0.1)';
+                btn.style.color = isCompactMode ? 'var(--accent-primary)' : '#ccc';
+            }
+        }
+
+        function toggleCompactMode() {
+            isCompactMode = !isCompactMode;
+            try { localStorage.setItem(COMPACT_MODE_KEY, isCompactMode); } catch(e){}
+            updateCompactButtonState();
+            UIComponents.renderFavs();
         }
 
         let savedScrollPosition = 0;
@@ -812,12 +1174,75 @@
             window.scrollTo(0, savedScrollPosition);
         }
 
-        function toggleCompactMode() {
-            isCompactMode = !isCompactMode;
-            try { localStorage.setItem(COMPACT_MODE_KEY, isCompactMode); } catch(e){}
-            let btn = document.getElementById('btnCompactToggle');
-            if (btn) btn.style.borderColor = isCompactMode ? 'var(--accent-primary)' : '#3d3d3d';
-            UIComponents.renderFavs();
+        function openGloomsFullScreen() {
+            savedScrollPosition = window.scrollY || window.pageYOffset;
+            document.getElementById('gloomsFullScreenOverlay').classList.add('open');
+            document.body.classList.add('modal-open');
+            document.body.style.top = `-${savedScrollPosition}px`;
+            initGloomsLogic();
+        }
+
+        function closeGloomsFullScreen() {
+            document.getElementById('gloomsFullScreenOverlay').classList.remove('open');
+            document.body.classList.remove('modal-open');
+            document.body.style.top = '';
+            window.scrollTo(0, savedScrollPosition);
+        }
+
+        function openAccountsFullScreen() {
+            savedScrollPosition = window.scrollY || window.pageYOffset;
+            document.getElementById('accountsFullScreenOverlay').classList.add('open');
+            document.body.classList.add('modal-open');
+            document.body.style.top = `-${savedScrollPosition}px`;
+            initAccountsLogic();
+        }
+
+        function closeAccountsFullScreen() {
+            document.getElementById('accountsFullScreenOverlay').classList.remove('open');
+            document.body.classList.remove('modal-open');
+            document.body.style.top = '';
+            window.scrollTo(0, savedScrollPosition);
+        }
+
+        // ==========================================
+        // FUNCIÓN INTERACTIVA: SALTAR DESDE EL BOT AL CORREO EN CUENTAS
+        // ==========================================
+        function jumpToAccountByBot(botName) {
+            if (!botName) return;
+            let targetServer = null;
+            let targetAccountId = null;
+
+            for (let srv of AccountsStore.data) {
+                let foundAcc = srv.accs.find(a => a.botLinkedName && a.botLinkedName.toLowerCase().trim() === botName.toLowerCase().trim());
+                if (foundAcc) {
+                    targetServer = srv;
+                    targetAccountId = foundAcc.id;
+                    break;
+                }
+            }
+
+            if (!targetServer) {
+                alert(`El bot "${botName}" no tiene ninguna cuenta ni correo vinculado en el módulo de Cuentas.`);
+                return;
+            }
+
+            // Expandir el servidor si estaba minimizado
+            targetServer.collapsed = false;
+            AccountsStorage.save(AccountsStore.data);
+
+            // Abrir la pantalla completa de cuentas
+            openAccountsFullScreen();
+            AccountsUI.render();
+
+            // Hacer scroll hasta el servidor y resaltar la tarjeta / correo específico
+            setTimeout(() => {
+                const cardEl = document.getElementById(`acc-card-${targetServer.id}`);
+                if (cardEl) {
+                    cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    cardEl.classList.add('active-highlight');
+                    setTimeout(() => cardEl.classList.remove('active-highlight'), 2500);
+                }
+            }, 100);
         }
 
         function toggleWorldFavorite(worldName, event) {
@@ -829,21 +1254,6 @@
             }
             try { localStorage.setItem(FAV_WORLDS_KEY, JSON.stringify(favWorlds)); } catch(e){}
             UIComponents.renderWorlds();
-        }
-
-        function toggleNoteBox(safeId, event) {
-            if (event) { event.stopPropagation(); }
-            let box = document.getElementById(safeId);
-            if (!box) return;
-            box.classList.toggle('open');
-        }
-
-        function updateCharacterNote(charName, noteVal) {
-            let char = favorites.find(f => f.name.toLowerCase() === charName.toLowerCase());
-            if (char) {
-                char.note = noteVal;
-                AppStorage.save();
-            }
         }
 
         function openGuildStats(charName) {
@@ -1000,7 +1410,7 @@
                     toast.classList.add('fade-out');
                     setTimeout(() => { if (toast.parentElement) toast.remove(); }, 500);
                 }
-            }, 8000);
+            }, 6000);
 
             try { if (navigator.vibrate) navigator.vibrate([200, 100, 200]); } catch(e) {}
             try {
@@ -1028,26 +1438,35 @@
                 } catch (e) {}
             },
             getBackupFilename() {
-                return `tibia_respaldo_${new Date().toISOString().split('T')[0]}.json`;
+                return `tibia_tracker_respaldo_unificado_${new Date().toISOString().split('T')[0]}.json`;
+            },
+            getUnifiedDataObject() {
+                let lightweightFavs = favorites.map(f => ({ name: f.name, category: f.category || 'bots' }));
+                let accountsData = AccountsStore.data;
+                let gloomsData = gloomsState;
+                return {
+                    favorites: lightweightFavs,
+                    accounts: accountsData,
+                    glooms: gloomsData
+                };
             },
             openExportModal() {
-                if (favorites.length === 0) { alert('No hay personajes guardados para exportar.'); return; }
-                let lightweightData = favorites.map(f => ({ name: f.name, category: f.category || 'bots', note: f.note || '' }));
+                let unifiedObj = this.getUnifiedDataObject();
                 let filename = this.getBackupFilename();
-                document.getElementById('exportTitle').textContent = `Respaldo (${filename}):`;
-                document.getElementById('exportTextarea').value = JSON.stringify(lightweightData, null, 2);
+                document.getElementById('exportTitle').textContent = `Respaldo Unificado (${filename}):`;
+                document.getElementById('exportTextarea').value = JSON.stringify(unifiedObj, null, 2);
                 openModal('exportModal');
             },
             async saveBackupFile() {
-                let lightweightData = favorites.map(f => ({ name: f.name, category: f.category || 'bots', note: f.note || '' }));
-                let content = JSON.stringify(lightweightData, null, 2);
+                let unifiedObj = this.getUnifiedDataObject();
+                let content = JSON.stringify(unifiedObj, null, 2);
                 let filename = this.getBackupFilename();
 
                 try {
                     if (typeof File !== 'undefined' && navigator.share && navigator.canShare) {
                         const file = new File([content], filename, { type: 'application/json' });
                         if (navigator.canShare({ files: [file] })) {
-                            await navigator.share({ files: [file], title: 'Respaldo Tibia', text: 'Guarda tu archivo .json' });
+                            await navigator.share({ files: [file], title: 'Respaldo Unificado Tibia', text: 'Guarda tu archivo .json' });
                             return;
                         }
                     }
@@ -1072,10 +1491,10 @@
                 try {
                     if (navigator.clipboard && window.isSecureContext) {
                         await navigator.clipboard.writeText(textarea.value);
-                        alert('¡Respaldo copiado al portapapeles!');
+                        alert('¡Respaldo unificado copiado al portapapeles!');
                     } else {
                         document.execCommand('copy');
-                        alert('¡Respaldo copiado!');
+                        alert('¡Respaldo unificado copiado!');
                     }
                 } catch (e) { alert('Selecciona y copia el texto manualmente.'); }
             },
@@ -1096,11 +1515,30 @@
                 if (!text) { alert('Pega primero el código JSON o selecciona un archivo.'); return; }
                 try {
                     let imported = JSON.parse(text);
-                    if (Array.isArray(imported)) {
+                    
+                    if (imported && (imported.favorites || imported.accounts || imported.glooms)) {
+                        if (Array.isArray(imported.favorites)) {
+                            CharacterManager.mergeList(imported.favorites);
+                        }
+                        if (Array.isArray(imported.accounts)) {
+                            AccountsStore.data = imported.accounts;
+                            AccountsStorage.save(AccountsStore.data);
+                            AccountsUI.render();
+                        }
+                        if (imported.glooms && typeof imported.glooms === 'object') {
+                            gloomsState = imported.glooms;
+                            gloomsSaveData();
+                            initGloomsLogic();
+                        }
+                        closeModal('importModal');
+                        alert('¡Respaldo unificado restaurado con éxito en todos los módulos!');
+                    } else if (Array.isArray(imported)) {
                         CharacterManager.mergeList(imported);
                         closeModal('importModal');
-                        alert('¡Respaldo JSON cargado e integrado con éxito!');
-                    } else { alert('Formato de archivo JSON inválido.'); }
+                        alert('¡Lista de favoritos cargada con éxito!');
+                    } else { 
+                        alert('Formato de archivo JSON no reconocido.'); 
+                    }
                 } catch (err) { alert('No se pudo leer el archivo o texto JSON.'); }
             }
         };
@@ -1120,8 +1558,8 @@
             const copyBtn = document.getElementById('copyExportBtn');
             if (saveBtn) saveBtn.addEventListener('click', () => AppStorage.saveBackupFile());
             if (copyBtn) copyBtn.addEventListener('click', () => AppStorage.copyExportText());
-            let btn = document.getElementById('btnCompactToggle');
-            if (btn && isCompactMode) btn.style.borderColor = 'var(--accent-primary)';
+
+            updateCompactButtonState();
         });
 
         const TibiaAPI = {
@@ -1228,7 +1666,8 @@
                     if (res.status === 404) return { notFound: true };
                     if (!res.ok) return null;
                     let data = await res.json();
-                    let c = data.character?.character;
+                    let charRoot = data.character;
+                    let c = charRoot?.character;
                     if (!c || !c.name) return { notFound: true };
 
                     let online = (typeof c.status === 'string' && c.status.toLowerCase() === 'online') || (c.online === true || c.online === 'true');
@@ -1240,7 +1679,14 @@
                     return {
                         name: c.name, level: c.level, world: c.world, vocation: c.vocation,
                         sex: c.sex || c.gender || 'male', status: online ? 'online' : 'offline',
-                        guild: guildName, guildRawName: rawGuild, residence: c.residence || 'Desconocida', deaths: data.character.deaths || []
+                        guild: guildName, guildRawName: rawGuild, residence: c.residence || 'Desconocida', 
+                        deaths: charRoot.deaths || [],
+                        accountStatus: c.account_status || 'Free Account',
+                        formerNames: c.former_names || [],
+                        houses: c.houses || [],
+                        achievementPoints: c.achievement_points || 0,
+                        guildJoined: c.guild?.joined || null,
+                        otherCharacters: charRoot.other_characters || []
                     };
                 } catch(e) { return null; }
             },
@@ -1268,6 +1714,12 @@
 
         function escapeQuotes(str) {
             return (str || '').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+        }
+
+        function getCategoryLabel(category) {
+            if (category === 'enemies') return 'Enemigo';
+            if (category === 'friends') return 'Amigo';
+            return 'Bot';
         }
 
         function getOutfitUrl(vocation, sex, isOnline, category) {
@@ -1406,7 +1858,7 @@
                     <img id="inlineWikiImg" class="wiki-img" src="${SAFE_FALLBACK_URL}" alt="Criatura" onerror="this.onerror=null; this.src=SAFE_FALLBACK_URL;">
                     <div style="overflow:hidden;">
                         <div class="wiki-stat-label">Tibia Fandom Wiki</div>
-                        <div id="inlineWikiName" style="font-size:13px; font-weight:bold; color:#3498db;">${monsterName}</div>
+                        <div id="inlineWikiName" style="font-size:13px; font-weight:bold; color:var(--accent-primary);">${monsterName}</div>
                     </div>
                 </div>
                 <div id="inlineWikiBody" style="display:flex; flex-direction:column; gap:6px; max-height:60vh; overflow-y:auto; padding-right:2px;">
@@ -1456,8 +1908,6 @@
 
                     if (pData?.parse) {
                         let wt = pData.parse.wikitext?.['*'] || '';
-                        let htmlText = pData.parse.text?.['*'] || '';
-
                         let hpMatch = wt.match(/\|\s*(?:hitpoints|hp)\s*=\s*([0-9,.]+)/i);
                         if (hpMatch) hp = hpMatch[1];
 
@@ -1560,7 +2010,7 @@
                         <div class="wiki-stat-item"><span class="wiki-stat-label">Atraviesa Elementos</span><span class="wiki-stat-val" style="color:var(--accent-secondary);">${walkField}</span></div>
                     </div>
                     <div class="wiki-section-title">📍 Hábitat y Localizaciones</div>
-                    <div class="wiki-full-row"><span class="wiki-stat-val" style="color:#3498db;">${locations}</span></div>
+                    <div class="wiki-full-row"><span class="wiki-stat-val" style="color:var(--accent-primary);">${locations}</span></div>
                     <div class="wiki-section-title">💰 Botín / Loot de la Criatura</div>
                     <div class="loot-box-container">${lootList}</div>
                     <div style="font-size:9px; color:#888; text-align:center; margin-top:2px;">Datos extraídos de Tibia Fandom Wiki</div>
@@ -1590,9 +2040,11 @@
                 let img = document.getElementById('bestiaryIconImg');
                 if (img) img.src = url;
             });
-            fetchFandomGifUrl('Squeezing Gear of Girlpower').then(url => {
-                let img = document.getElementById('toolsIconImg');
-                if (img) img.src = url;
+            fetchFandomGifUrl('Gloom Wolf').then(url => {
+                let gloomsImg = document.getElementById('gloomsIconImg');
+                if (gloomsImg) gloomsImg.src = url;
+                let gloomsTabIcon = document.getElementById('gloomsTabIcon');
+                if (gloomsTabIcon) gloomsTabIcon.src = url;
             });
         }
 
@@ -1652,7 +2104,7 @@
                 let isScrolledDown = window.scrollY > 180;
                 box.className = isScrolledDown ? 'search-result floating' : 'search-result';
                 box.style.display = 'block';
-                box.innerHTML = `<button class="search-close-btn" onclick="CharacterManager.clearSearch()" title="Cerrar">✕</button>⏳ Consultando a Tibia...`;
+                box.innerHTML = `<button class="search-close-btn" onclick="CharacterManager.clearSearch()" title="Cerrar">✕</button>⏳ Consultando información detallada a Tibia...`;
                 
                 let res = await TibiaAPI.fetchCharacter(val);
                 if (res?.notFound) {
@@ -1678,7 +2130,6 @@
                 if (!tempChar) return;
                 if (!favorites.some(f => f.name.toLowerCase() === tempChar.name.toLowerCase())) {
                     tempChar.category = category;
-                    tempChar.note = '';
                     favorites.push(tempChar);
                     AppStorage.save();
                     AppNavigation.switchCategory(category);
@@ -1706,14 +2157,15 @@
                     UIComponents.renderMainNews();
                     return;
                 }
-                if (currentCategory === 'creatures' || currentCategory === 'tools' || currentCategory === 'theme') return;
+                if (currentCategory === 'creatures' || currentCategory === 'theme') return;
 
                 if (favorites.length === 0) return;
-                const btn = document.getElementById('btnUpdateFavs'), alertBox = document.getElementById('updateAlert');
-                alertBox.style.display = 'none'; alertBox.innerHTML = '';
+                const btn = document.getElementById('btnUpdateFavs');
                 if (btn) btn.disabled = true;
 
                 let totalFavs = favorites.length, processedCount = 0;
+                let deathEvents = 0, levelEvents = 0, banEvents = 0;
+
                 for (let i = 0; i < totalFavs; i += 8) {
                     const batch = favorites.slice(i, i + 8);
                     if (btn) btn.textContent = `⏳ ${processedCount}/${totalFavs}`;
@@ -1723,32 +2175,58 @@
                         processedCount++;
                         if (updated && !updated.notFound) {
                             updated.category = f.category;
-                            updated.note = f.note || '';
+                            let catLabel = getCategoryLabel(f.category);
+
                             let oldLevel = parseInt(f.level, 10), newLevel = parseInt(updated.level, 10);
                             if (!isNaN(oldLevel) && !isNaN(newLevel) && newLevel > oldLevel) {
-                                NotificationManager.add('level', f.name, NOTIF_TEXTS.levelMsg(newLevel));
-                                triggerLiveToast('level', `🎉 NIVEL: ${f.name}`, `Avanzó al Nivel ${newLevel}`);
+                                levelEvents++;
+                                let msg = `El ${catLabel.toLowerCase()} ${f.name} subió al Nivel ${newLevel}`;
+                                NotificationManager.add('level', `🎉 ${catLabel} Nivel Up`, msg);
+                                if (levelEvents <= 2) {
+                                    triggerLiveToast('level', `🎉 ${catLabel}: ${f.name}`, `Subió al Nivel ${newLevel}`);
+                                }
                             }
                             let oldDeaths = f.deaths || [], newDeaths = updated.deaths || [];
                             if (newDeaths.length > 0 && !oldDeaths.some(d => d.time === newDeaths[0].time)) {
-                                NotificationManager.add('death', f.name, formatDeath(newDeaths[0].reason));
-                                triggerLiveToast('death', `☠️ MUERTE: ${f.name}`, `Cayó en combate.`);
+                                deathEvents++;
+                                let deathDesc = formatDeath(newDeaths[0].reason);
+                                let msg = `El ${catLabel.toLowerCase()} ${f.name} cayó en combate (${deathDesc})`;
+                                NotificationManager.add('death', `☠️ ${catLabel} Muerto`, msg);
+                                if (deathEvents <= 2) {
+                                    triggerLiveToast('death', `☠️ ${catLabel}: ${f.name}`, `Cayó en combate.`);
+                                }
                             }
                             Object.assign(f, updated);
                             if (tempChar && tempChar.name.toLowerCase() === f.name.toLowerCase()) tempChar = Object.assign({}, f);
                         } else if (updated?.notFound) {
                             if (!notifications.some(n => n.type === 'deleted' && n.title.includes(f.name))) {
-                                NotificationManager.add('deleted', f.name, NOTIF_TEXTS.deletedMsg);
-                                triggerLiveToast('deleted', `⚠️ ESTADO: ${f.name}`, 'Personaje baneado o eliminado.');
+                                banEvents++;
+                                let catLabel = getCategoryLabel(f.category);
+                                let msg = `El ${catLabel.toLowerCase()} ${f.name} fue baneado o eliminado.`;
+                                NotificationManager.add('deleted', `⚠️ ${catLabel} Baneado`, msg);
+                                if (banEvents <= 2) {
+                                    triggerLiveToast('deleted', `⚠️ ${catLabel}: ${f.name}`, 'Baneado o eliminado.');
+                                }
                             }
                             f.status = 'deleted';
                             if (tempChar && tempChar.name.toLowerCase() === f.name.toLowerCase()) tempChar.status = 'deleted';
                         }
                     }));
-                    if (i + 8 < totalFavs) await new Promise(resolve => setTimeout(resolve, 600));
+                    if (i + 8 < totalFavs) await new Promise(resolve => setTimeout(resolve, 500));
                 }
 
                 AppStorage.save();
+
+                if (deathEvents >= 3) {
+                    triggerLiveToast('death', `☠️ ${deathEvents} Muertes registradas`, 'Toca para ver los detalles en el historial.');
+                }
+                if (levelEvents >= 3) {
+                    triggerLiveToast('level', `🎉 ${levelEvents} Subidas de nivel`, 'Toca para ver los detalles en el historial.');
+                }
+                if (banEvents >= 3) {
+                    triggerLiveToast('deleted', `⚠️ ${banEvents} Baneos / Eliminaciones`, 'Toca para ver los detalles en el historial.');
+                }
+
                 if (currentCategory === 'notifications') UIComponents.renderNotifications();
                 else UIComponents.renderFavs();
                 if (tempChar) UIComponents.renderSearchResult();
@@ -1758,14 +2236,12 @@
                 newList.forEach(item => {
                     let name = typeof item === 'string' ? item : item.name;
                     let category = typeof item === 'object' && item.category ? item.category : 'bots';
-                    let note = typeof item === 'object' && item.note ? item.note : '';
                     if (!name) return;
                     let existingIndex = favorites.findIndex(f => f.name.toLowerCase() === name.toLowerCase());
                     if (existingIndex !== -1) {
                         favorites[existingIndex].category = category;
-                        if (note) favorites[existingIndex].note = note;
                     } else {
-                        favorites.push({ name, category, note, level: '...', world: '...', vocation: '...', sex: 'male', status: 'offline', guild: '...', residence: 'Desconocida', deaths: [] });
+                        favorites.push({ name, category, level: '...', world: '...', vocation: '...', sex: 'male', status: 'offline', guild: '...', residence: 'Desconocida', deaths: [] });
                     }
                 });
                 AppStorage.save(); UIComponents.renderFavs(); this.updateAll();
@@ -1779,38 +2255,29 @@
                 document.getElementById(`tab-${cat}`)?.classList.add('active');
 
                 document.getElementById('currentListTitle').textContent = {
-                    bots: '🤖 Lista de Bots', enemies: '⚔️ Enemigos', friends: '🛡️ Amigos', worlds: '🌍 Servidores', news: '📢 News Ticker', mainnews: '📰 News', notifications: '🔔 Historial de Notificaciones', creatures: '🐲 Bestiario', tools: '🛠️ Herramientas', theme: '🎨 Personalizar Apariencia'
+                    bots: '🤖 Lista de Bots', enemies: '⚔️ Enemigos', friends: '🛡️ Amigos', worlds: '🌍 Servidores', news: '📢 News Ticker', mainnews: '📰 News', notifications: '🔔 Historial de Notificaciones', creatures: '🐲 Bestiario', theme: '🎨 Personalizar Apariencia'
                 }[cat];
 
                 let isNormalFavCategory = (cat === 'bots' || cat === 'enemies' || cat === 'friends');
                 document.getElementById('filterRow').style.display = isNormalFavCategory ? 'flex' : 'none';
                 
-                // Selector de mundos (Open PvP vs Optional PvP)
                 let worldFilterRow = document.getElementById('worldFilterRow');
                 if (worldFilterRow) {
                     worldFilterRow.style.display = (cat === 'worlds' && !viewingWorldDetails) ? 'flex' : 'none';
                 }
 
                 let updateBtn = document.getElementById('btnUpdateFavs');
-                let compactToggle = document.getElementById('btnCompactToggle');
+                let compactToggleBtn = document.getElementById('btnCompactToggle');
                 
-                if (cat === 'creatures' || cat === 'tools' || cat === 'theme') {
-                    if (updateBtn) updateBtn.style.display = 'none';
-                    if (compactToggle) compactToggle.style.display = 'none';
-                } else if (cat === 'worlds') {
-                    if (updateBtn) updateBtn.style.display = 'block';
-                    if (compactToggle) compactToggle.style.display = 'none';
-                } else {
-                    if (updateBtn) updateBtn.style.display = 'block';
-                    if (compactToggle) compactToggle.style.display = 'block';
-                }
+                let showFavControls = isNormalFavCategory;
+                if (updateBtn) updateBtn.style.display = (cat === 'worlds' || showFavControls) ? 'block' : 'none';
+                if (compactToggleBtn) compactToggleBtn.style.display = showFavControls ? 'block' : 'none';
 
                 if (cat === 'notifications') { NotificationManager.markAllAsRead(); UIComponents.renderNotifications(); }
                 else if (cat === 'worlds') UIComponents.renderWorlds();
                 else if (cat === 'news') UIComponents.renderNewsTickers();
                 else if (cat === 'mainnews') UIComponents.renderMainNews();
                 else if (cat === 'creatures') UIComponents.renderCreatureSearchTab();
-                else if (cat === 'tools') UIComponents.renderToolsTab();
                 else if (cat === 'theme') UIComponents.renderThemeTab();
                 else UIComponents.renderFavs();
             },
@@ -1819,11 +2286,6 @@
                 document.querySelectorAll('#filterRow .filter-btn').forEach(btn => btn.classList.remove('active'));
                 document.getElementById(`filter-${status}`).classList.add('active');
                 UIComponents.renderFavs();
-            },
-            openNotificationsAndHideAlert() {
-                let alertBox = document.getElementById('updateAlert');
-                if (alertBox) { alertBox.style.display = 'none'; alertBox.innerHTML = ''; }
-                this.switchCategory('notifications');
             }
         };
 
@@ -1907,7 +2369,6 @@
             },
             renderThemeTab() {
                 let container = document.getElementById('favList');
-                
                 let presetsHtml = Object.keys(PRESET_THEMES).map(key => {
                     let p = PRESET_THEMES[key];
                     let isActive = currentThemeConfig.primary === p.primary && currentThemeConfig.bgBody === p.bgBody;
@@ -1924,117 +2385,37 @@
                 }).join('');
 
                 container.innerHTML = `
-                    <div style="margin-bottom:8px;"><button class="btn-action" onclick="AppNavigation.switchCategory('bots')">⬅ Volver</button></div>
-                    
                     <div class="theme-section">
-                        <div style="font-weight:bold; font-size:11px; color:var(--accent-primary);">🎨 Temas y Estilos Predeterminados (24 Opciones)</div>
+                        <div style="font-weight:bold; font-size:11px; color:var(--accent-primary); margin-bottom:4px;">🎨 Temas Disponibles</div>
                         <div class="theme-grid">${presetsHtml}</div>
-                    </div>
-
-                    <div class="theme-section">
-                        <div style="font-weight:bold; font-size:11px; color:var(--accent-primary);">✨ Efecto Neón y Transparencias</div>
-                        <div class="custom-color-row">
-                            <span>Activar resplandor en bordes y tarjetas:</span>
-                            <input type="checkbox" ${currentThemeConfig.neonEnabled ? 'checked' : ''} onchange="ThemeManager.toggleNeon(this.checked)" style="width: 18px; height: 18px; accent-color: var(--accent-primary); cursor: pointer;">
-                        </div>
-                        <div class="custom-color-row">
-                            <span>Intensidad del Brillo Neón:</span>
-                            <select onchange="ThemeManager.updateCustom('neonIntensity', this.value); ThemeManager.applyStyle();" style="background:var(--bg-body); color:#fff; border:1px solid #444; border-radius:4px; padding:2px 4px; font-size:10px;">
-                                <option value="2px" ${currentThemeConfig.neonIntensity === '2px' ? 'selected' : ''}>Ultra pequeño (2px)</option>
-                                <option value="3px" ${currentThemeConfig.neonIntensity === '3px' || !currentThemeConfig.neonIntensity ? 'selected' : ''}>Muy pequeño (3px)</option>
-                                <option value="5px" ${currentThemeConfig.neonIntensity === '5px' ? 'selected' : ''}>Pequeño (5px)</option>
-                                <option value="10px" ${currentThemeConfig.neonIntensity === '10px' ? 'selected' : ''}>Normal (10px)</option>
-                                <option value="18px" ${currentThemeConfig.neonIntensity === '18px' ? 'selected' : ''}>Intenso (18px)</option>
-                                <option value="25px" ${currentThemeConfig.neonIntensity === '25px' ? 'selected' : ''}>Cyberpunk Extremo (25px)</option>
-                            </select>
-                        </div>
-                        <div class="custom-color-row">
-                            <span>Opacidad de las Tarjetas:</span>
-                            <select onchange="ThemeManager.updateCustom('cardOpacity', this.value); ThemeManager.applyStyle();" style="background:var(--bg-body); color:#fff; border:1px solid #444; border-radius:4px; padding:2px 4px; font-size:10px;">
-                                <option value="1" ${currentThemeConfig.cardOpacity === '1' || !currentThemeConfig.cardOpacity ? 'selected' : ''}>Sólido (100%)</option>
-                                <option value="0.9" ${currentThemeConfig.cardOpacity === '0.9' ? 'selected' : ''}>Ligeramente translúcido (90%)</option>
-                                <option value="0.8" ${currentThemeConfig.cardOpacity === '0.8' ? 'selected' : ''}>Translúcido (80%)</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="theme-section">
-                        <div style="font-weight:bold; font-size:11px; color:var(--accent-primary);">📱 Bordes y Tamaño de Fuente</div>
-                        
-                        <div class="custom-color-row">
-                            <span>Redondeo de bordes:</span>
-                            <select onchange="ThemeManager.updateCustom('borderRadius', this.value)" style="background:var(--bg-body); color:#fff; border:1px solid #444; border-radius:4px; padding:2px 4px; font-size:10px;">
-                                <option value="0px" ${currentThemeConfig.borderRadius === '0px' ? 'selected' : ''}>Recto (Classic)</option>
-                                <option value="6px" ${currentThemeConfig.borderRadius === '6px' ? 'selected' : ''}>Suave (Normal)</option>
-                                <option value="12px" ${currentThemeConfig.borderRadius === '12px' ? 'selected' : ''}>Redondeado (Moderno)</option>
-                            </select>
-                        </div>
-
-                        <div class="custom-color-row">
-                            <span>Tamaño de fuente:</span>
-                            <select onchange="ThemeManager.updateCustom('fontScale', this.value)" style="background:var(--bg-body); color:#fff; border:1px solid #444; border-radius:4px; padding:2px 4px; font-size:10px;">
-                                <option value="11px" ${currentThemeConfig.fontScale === '11px' ? 'selected' : ''}>Compacto</option>
-                                <option value="12px" ${currentThemeConfig.fontScale === '12px' ? 'selected' : ''}>Normal</option>
-                                <option value="13px" ${currentThemeConfig.fontScale === '13px' ? 'selected' : ''}>Grande</option>
-                            </select>
-                        </div>
                     </div>
                 `;
             },
             async renderCreatureSearchTab() {
                 let container = document.getElementById('favList');
                 container.innerHTML = `
-                    <div style="margin-bottom:8px;"><button class="btn-action" onclick="AppNavigation.switchCategory('bots')">⬅ Volver</button></div>
                     <div class="search-card" style="margin-bottom: 8px;">
                         <div class="search-row">
                             <input type="text" id="creatureSearchInput" placeholder="Escribe criatura o boss (Ej: Demon)..." oninput="handleTibiaDataCreatureInput(event)" onkeypress="handleCreatureSearchKey(event)">
-                            <button onclick="executeCreatureSearch()" style="background:#3498db; color:#fff;">Buscar</button>
+                            <button onclick="executeCreatureSearch()" style="background:var(--accent-primary); color:#121212;">Buscar</button>
                         </div>
                         <div id="creatureSuggestions" class="creature-suggestions-box"></div>
                     </div>
                     <div id="creatureInlineResult" class="inline-creature-result" style="display:none;"></div>
                 `;
             },
-            renderToolsTab() {
-                let container = document.getElementById('favList');
-                container.innerHTML = `
-                    <div style="margin-bottom:8px;"><button class="btn-action" onclick="AppNavigation.switchCategory('bots')">⬅ Volver</button></div>
-                    <div class="tools-grid">
-                        <a href="https://tibiamaps.io/map" target="_blank" class="tool-card">
-                            <span class="tool-title">🗺️ TibiaMaps.io</span>
-                            <span class="tool-desc">Mapas interactivos de Tibia.</span>
-                        </a>
-                        <a href="https://exevopan.com/" target="_blank" class="tool-card">
-                            <span class="tool-title">⏱️ Exevo Pan</span>
-                            <span class="tool-desc">Rotaciones de Bosses y Highscores.</span>
-                        </a>
-                        <a href="https://guildstats.eu/" target="_blank" class="tool-card">
-                            <span class="tool-title">📊 GuildStats</span>
-                            <span class="tool-desc">Estadísticas avanzadas y rankings.</span>
-                        </a>
-                        <a href="https://www.tibiaring.com/" target="_blank" class="tool-card">
-                            <span class="tool-title">🤖 TibiaRing</span>
-                            <span class="tool-desc">Baneos, bots y analíticas de mundos.</span>
-                        </a>
-                        <a href="https://www.tibia.com/" target="_blank" class="tool-card">
-                            <span class="tool-title">🌐 Tibia.com</span>
-                            <span class="tool-desc">Página oficial del juego.</span>
-                        </a>
-                    </div>
-                `;
-            },
             async renderNewsTickers() {
                 let container = document.getElementById('favList');
-                container.innerHTML = `<div style="margin-bottom:8px;"><button class="btn-action" onclick="AppNavigation.switchCategory('bots')">⬅ Volver</button></div><div class="empty-msg">⏳ Cargando News Ticker completo...</div>`;
+                container.innerHTML = `<div class="empty-msg">⏳ Cargando News Ticker completo...</div>`;
                 document.getElementById('currentListTitle').textContent = '📢 News Ticker';
 
                 if (!cachedNewsTickers) cachedNewsTickers = await TibiaAPI.fetchNewsTickers();
                 if (!cachedNewsTickers || cachedNewsTickers.length === 0) {
-                    container.innerHTML = `<div style="margin-bottom:8px;"><button class="btn-action" onclick="AppNavigation.switchCategory('bots')">⬅ Volver</button></div><div class="empty-msg">No se pudieron cargar los avisos recientes.</div>`;
+                    container.innerHTML = `<div class="empty-msg">No se pudieron cargar los avisos recientes.</div>`;
                     return;
                 }
 
-                container.innerHTML = `<div style="margin-bottom:8px;"><button class="btn-action" onclick="AppNavigation.switchCategory('bots')">⬅ Volver</button></div>` + cachedNewsTickers.map(item => {
+                container.innerHTML = cachedNewsTickers.map(item => {
                     let messageText = item._full_text || item.text || item.message || item.content || 'Sin descripción';
                     return `
                         <div class="ticker-list-item">
@@ -2049,16 +2430,16 @@
             },
             async renderMainNews() {
                 let container = document.getElementById('favList');
-                container.innerHTML = `<div style="margin-bottom:8px;"><button class="btn-action" onclick="AppNavigation.switchCategory('bots')">⬅ Volver</button></div><div class="empty-msg">⏳ Cargando Noticias Principales oficiales...</div>`;
+                container.innerHTML = `<div class="empty-msg">⏳ Cargando Noticias Principales oficiales...</div>`;
                 document.getElementById('currentListTitle').textContent = '📰 News';
 
                 if (!cachedMainNews) cachedMainNews = await TibiaAPI.fetchMainNewsArchive();
                 if (!cachedMainNews || cachedMainNews.length === 0) {
-                    container.innerHTML = `<div style="margin-bottom:8px;"><button class="btn-action" onclick="AppNavigation.switchCategory('bots')">⬅ Volver</button></div><div class="empty-msg">No se pudieron cargar las noticias principales.</div>`;
+                    container.innerHTML = `<div class="empty-msg">No se pudieron cargar las noticias principales.</div>`;
                     return;
                 }
 
-                container.innerHTML = `<div style="margin-bottom:8px;"><button class="btn-action" onclick="AppNavigation.switchCategory('bots')">⬅ Volver</button></div>` + cachedMainNews.map(item => {
+                container.innerHTML = cachedMainNews.map(item => {
                     let titleText = item.news || item.title || item.headline || item.subject || 'Noticia de Tibia';
                     let dateText = item.date || item.publication_date || '';
                     let catText = item.category || item.type || 'News';
@@ -2089,9 +2470,60 @@
                 let safeBoxId = `search-deaths-${tempChar.name.replace(/\s+/g, '_')}`;
                 let safeWorld = escapeQuotes(tempChar.world);
                 
+                let guildJoinedText = tempChar.guildJoined ? ` (se unió el ${tempChar.guildJoined})` : '';
                 let guildHtml = tempChar.guildRawName 
-                    ? `<div class="guild-text guild-clickable" onclick="loadGuildOnlineMembers('${escapeQuotes(tempChar.guildRawName)}')">🛡️ ${tempChar.guild} (Ver online)</div>`
+                    ? `<div class="guild-text guild-clickable" onclick="loadGuildOnlineMembers('${escapeQuotes(tempChar.guildRawName)}')">🛡️ ${tempChar.guild}${guildJoinedText} (Ver online)</div>`
                     : `<div class="guild-text">🛡️ ${tempChar.guild}</div>`;
+
+                let isPrem = (tempChar.accountStatus || '').toLowerCase().includes('premium');
+                let accountBadge = isPrem ? `<span style="color:#f1c40f; font-weight:bold;">⭐ Premium Account</span>` : `<span style="color:#aaa;">Free Account</span>`;
+
+                let formerNamesHtml = '';
+                if (tempChar.formerNames && tempChar.formerNames.length > 0) {
+                    formerNamesHtml = `
+                        <div class="search-extra-section">
+                            <div class="search-extra-title">🕵️ Nombres Anteriores</div>
+                            <div style="color:#ccc;">${tempChar.formerNames.join(', ')}</div>
+                        </div>
+                    `;
+                }
+
+                let housesHtml = '';
+                if (tempChar.houses && tempChar.houses.length > 0) {
+                    let houseItems = tempChar.houses.map(h => `🏠 <b>${h.name}</b> (${h.town || 'Desconocido'})`).join('<br>');
+                    housesHtml = `
+                        <div class="search-extra-section">
+                            <div class="search-extra-title">🏰 Propiedades / Casas</div>
+                            <div style="color:var(--accent-primary); line-height:1.3;">${houseItems}</div>
+                        </div>
+                    `;
+                }
+
+                let altsHtml = '';
+                if (tempChar.otherCharacters && tempChar.otherCharacters.length > 0) {
+                    let altRows = tempChar.otherCharacters.map(alt => {
+                        let isAltOnline = (alt.status || '').toLowerCase() === 'online' || alt.online;
+                        let safeAltName = escapeQuotes(alt.name);
+                        return `
+                            <div class="alt-char-row" onclick="searchPlayer('${safeAltName}')" title="Buscar a ${safeAltName}">
+                                <div>
+                                    <span class="alt-char-name">${alt.name}</span>
+                                    ${alt.deleted ? '<span style="color:#e74c3c; font-size:8px;"> (En borrado)</span>' : ''}
+                                </div>
+                                <div class="alt-char-meta">
+                                    ${alt.world || tempChar.world} | ${isAltOnline ? '🟢' : '🔴'}
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+
+                    altsHtml = `
+                        <div class="search-extra-section">
+                            <div class="search-extra-title">👥 Cuentas secundarias (${tempChar.otherCharacters.length})</div>
+                            <div class="search-alts-grid">${altRows}</div>
+                        </div>
+                    `;
+                }
 
                 let deathsHtml = (tempChar.deaths || []).length > 0 ? tempChar.deaths.map(d => {
                     let mName = escapeQuotes(extractMonsterName(d.reason));
@@ -2109,11 +2541,19 @@
                             </div>
                             <div style="font-size:10px; color:var(--accent-secondary);">Nivel: ${tempChar.level} | ${tempChar.vocation}</div>
                             <div style="font-size:10px; color:#ccc;">
-                                <span class="world-link" onclick="openTibiaRingWorld('${safeWorld}', event)" title="Ver bots baneados en ${safeWorld} via TibiaRing">${tempChar.world}</span> | Residencia: ${tempChar.residence}
+                                <span class="world-link" onclick="openTibiaRingWorld('${safeWorld}', event)" title="Ver bots baneados en ${safeWorld} via TibiaRing">${tempChar.world}</span> | Residencia: <b>${tempChar.residence}</b>
+                            </div>
+                            <div style="font-size:9px; color:#aaa; margin-top:1px;">
+                                Status: ${accountBadge} | 🏆 Logros: <b>${tempChar.achievementPoints} pts</b>
                             </div>
                             ${guildHtml}
                         </div>
                     </div>
+
+                    ${formerNamesHtml}
+                    ${housesHtml}
+                    ${altsHtml}
+
                     <div class="search-actions-row">
                         <button class="btn-action btn-deaths-action" onclick="UIComponents.toggleDeathsContainer('${safeWrapperId}', this)">☠️ (${tempChar.deaths?.length || 0})</button>
                         <button class="btn-action btn-guildstats" onclick="openGuildStats('${safeName}')" title="GuildStats">📊</button>
@@ -2182,6 +2622,7 @@
                     let safeWName = escapeQuotes(w.name);
                     let pvpType = w.pvp_type || w.type || targetTypeTitle;
                     let isFav = favWorlds.includes(w.name);
+                    let locationRegion = w.location || '';
                     return `
                         <div class="world-card ${isFav ? 'fav-world' : ''}">
                             <div style="display:flex; align-items:center; gap:6px; flex:1; cursor:pointer;" onclick="UIComponents.renderWorldPlayers('${safeWName}', true)">
@@ -2192,6 +2633,7 @@
                                         ${w.premium_only ? '<span class="world-prem-badge">👑 Premium</span>' : ''}
                                     </div>
                                     <span class="world-type">${currentWorldType === 'open' ? '⚔️' : '🕊️'} ${pvpType}</span>
+                                    ${locationRegion ? `<span class="world-region">${locationRegion}</span>` : ''}
                                 </div>
                             </div>
                             <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">
@@ -2264,6 +2706,33 @@
                     let outfit = getOutfitUrl(f.vocation, f.sex, isOnline && !isDeleted, f.category);
                     let badgeHtml = isDeleted ? `<span class="badge badge-deleted">BANNED</span>` : (isOnline ? `<span class="badge badge-online">ONLINE</span>` : `<span class="badge badge-offline">OFFLINE</span>`);
 
+                    let botStaminaHtml = '';
+                    if (currentCategory === 'bots') {
+                        let linkedAcc = null;
+                        for (let srv of AccountsStore.data) {
+                            let found = srv.accs.find(acc => acc.botLinkedName && acc.botLinkedName.toLowerCase().trim() === f.name.toLowerCase().trim());
+                            if (found) { linkedAcc = found; break; }
+                        }
+                        let safeBotName = escapeQuotes(f.name);
+                        if (linkedAcc) {
+                            if (linkedAcc.st === 'stamina') {
+                                let rem = Number(linkedAcc.targetMs || 0) - Date.now();
+                                if (rem <= 0) {
+                                    botStaminaHtml = `<div class="bot-stamina-badge ready" onclick="jumpToAccountByBot('${safeBotName}')" title="Ir al correo en Cuentas">✅ Estamina Lista</div>`;
+                                } else {
+                                    let h = Math.floor(rem / 3600000);
+                                    let m = Math.floor((rem % 3600000) / 60000);
+                                    let timeStr = h >= 1 ? `${h}h ${m}m` : `${m > 0 ? m : 1}m`;
+                                    botStaminaHtml = `<div class="bot-stamina-badge recharging" onclick="jumpToAccountByBot('${safeBotName}')" title="Ir al correo en Cuentas">⏳ Sin Estamina: ${timeStr}</div>`;
+                                }
+                            } else if (linkedAcc.st === 'active') {
+                                botStaminaHtml = `<div class="bot-stamina-badge ready" onclick="jumpToAccountByBot('${safeBotName}')" title="Ir al correo en Cuentas">⚡ Cuenta Activa</div>`;
+                            } else {
+                                botStaminaHtml = `<div class="bot-stamina-badge" style="background:#222; color:#aaa; border:1px solid #444;" onclick="jumpToAccountByBot('${safeBotName}')" title="Ir al correo en Cuentas">🔗 Vinculado</div>`;
+                            }
+                        }
+                    }
+
                     let deathsHtml = (f.deaths || []).length > 0 ? f.deaths.map(d => {
                         let mName = escapeQuotes(extractMonsterName(d.reason));
                         return `<div class="death-row"><img class="death-icon" src="${SAFE_FALLBACK_URL}" data-monster="${mName}" onclick="openCreatureWiki('${mName}', event)" onerror="this.onerror=null; this.src='${SAFE_FALLBACK_URL}';"><div><div class="death-time">🕒 ${formatTimeAgo(d.time)}</div><div><b>Nivel ${d.level}:</b> ${formatDeath(d.reason)}</div></div></div>`;
@@ -2271,12 +2740,10 @@
 
                     let safeName = escapeQuotes(f.name), safeWrapperId = `death-wrap-${f.name.replace(/\s+/g, '_')}`;
                     let safeBoxId = `death-box-${f.name.replace(/\s+/g, '_')}`;
-                    let safeNoteId = `note-box-${f.name.replace(/\s+/g, '_')}`;
                     let safeWorld = escapeQuotes(f.world);
                     let card = document.createElement('div');
                     card.className = `fav-card ${isCompactMode ? 'compact' : ''}`;
                     
-                    let noteText = f.note || '';
                     card.innerHTML = `
                         <div class="fav-main">
                             <div class="fav-left" onclick="searchPlayer('${safeName}')" title="Ver detalles">
@@ -2286,19 +2753,16 @@
                                     <div style="font-size:10px; color:#aaa;">
                                         Lv. ${f.level} | ${f.vocation} | <span class="world-link" onclick="openTibiaRingWorld('${safeWorld}', event)" title="Ver bots baneados en ${safeWorld} via TibiaRing">${f.world}</span>
                                     </div>
+                                    ${botStaminaHtml}
                                 </div>
                             </div>
                             <div class="status-col">${badgeHtml}</div>
                             <div class="fav-actions">
                                 <button class="btn-action btn-deaths-action" onclick="UIComponents.toggleDeathsContainer('${safeWrapperId}', this)">☠️ (${f.deaths?.length || 0})</button>
-                                <button class="btn-action" onclick="toggleNoteBox('${safeNoteId}', event)" title="Nota personal" style="color:var(--accent-secondary); border-color:var(--accent-secondary);">📝</button>
                                 <button class="btn-action btn-guildstats" onclick="openGuildStats('${safeName}')" title="Ver en GuildStats">📊</button>
                                 <button class="btn-action btn-tibspy" onclick="openTibSpy('${safeName}')" title="Copiar nombre y abrir TibSpy">🕵️‍♂️</button>
                                 <button class="btn-action" style="color:#e74c3c;" onclick="CharacterManager.remove('${safeName}')">✕</button>
                             </div>
-                        </div>
-                        <div id="${safeNoteId}" class="char-note-container">
-                            <input type="text" placeholder="Escribe nota corta..." value="${escapeQuotes(noteText)}" oninput="updateCharacterNote('${safeName}', this.value)">
                         </div>
                         <div id="${safeWrapperId}" class="deaths-box-wrapper">
                             <button class="mini-scroll-btn top" onmousedown="startScrolling('${safeBoxId}', -6)" onmouseup="stopScrolling()" onmouseleave="stopScrolling()" ontouchstart="startScrolling('${safeBoxId}', -6)" ontouchend="stopScrolling()">▲</button>
@@ -2340,7 +2804,7 @@
                 let listHtml = filteredNotis.map(n => `
                     <div class="noti-item ${n.type}">
                         <div class="noti-header">
-                            <span>${n.type === 'death' ? NOTIF_TEXTS.deathTitle : (n.type === 'level' ? NOTIF_TEXTS.levelTitle : NOTIF_TEXTS.deletedTitle)}</span>
+                            <span>${n.type === 'death' ? '☠️ MUERTE' : (n.type === 'level' ? '🎉 NIVEL' : '⚠️ ESTADO')}</span>
                             <span>🕒 ${formatTimeAgo(n.timestamp)}</span>
                         </div>
                         <div style="font-weight:bold; color:#fff; margin-bottom:1px; font-size:12px;">${n.title}</div>
@@ -2520,10 +2984,657 @@
         function handleSearchKey(e) { if (e.key === 'Enter') CharacterManager.search(); }
         function toggleWorldSort(worldName) { sortDescOrder = !sortDescOrder; UIComponents.renderWorldPlayers(worldName, false); }
 
-        const AUTO_UPDATE_INTERVAL_MS = 10 * 60 * 1000;
+        // ==========================================
+        // MÓDULO GLOOMS FURS
+        // ==========================================
+        let gloomsState = JSON.parse(localStorage.getItem('gloomWolfState')) || {
+            pcs: [
+                { id: 1, name: 'PC 1', total: 0, history: [] },
+                { id: 2, name: 'PC 2', total: 0, history: [] },
+                { id: 3, name: 'PC 3', total: 0, history: [] },
+                { id: 4, name: 'PC 4', total: 0, history: [] }
+            ],
+            dailyRecords: [],
+            calcPrice: ''
+        };
+        if (!gloomsState.dailyRecords) gloomsState.dailyRecords = [];
+
+        function initGloomsLogic() {
+            if (gloomsState.calcPrice) {
+                let cp = document.getElementById('gloomsCalcPrice');
+                if (cp) cp.value = gloomsState.calcPrice;
+            }
+            gloomsRenderPCs();
+            gloomsUpdateGrandTotal();
+            gloomsRenderDailyRecords();
+            gloomsCalculateProfit();
+        }
+
+        function gloomsSaveData() {
+            let cp = document.getElementById('gloomsCalcPrice');
+            if (cp) gloomsState.calcPrice = cp.value;
+            localStorage.setItem('gloomWolfState', JSON.stringify(gloomsState));
+        }
+
+        function gloomsRenderPCs() {
+            const container = document.getElementById('gloomsPcGrid');
+            if (!container) return;
+            container.innerHTML = '';
+
+            gloomsState.pcs.forEach((pc, index) => {
+                const card = document.createElement('div');
+                card.className = 'glooms-pc-card';
+                card.innerHTML = `
+                    <div class="glooms-pc-header">
+                        <input type="text" class="glooms-pc-title" value="${pc.name}" onchange="gloomsUpdatePCName(${index}, this.value)">
+                        <div class="glooms-pc-subtotal" id="glooms-subtotal-${index}">${pc.total}</div>
+                    </div>
+                    <div class="glooms-input-wrapper">
+                        <input type="number" id="glooms-input-${index}" placeholder="Cant." min="1" onkeydown="gloomsHandleKeyDown(event, ${index})">
+                        <div class="glooms-buttons-stack">
+                            <button class="glooms-btn-action" onclick="gloomsAddManual(${index})">+</button>
+                            <button class="glooms-btn-action minus" onclick="gloomsSubtractManual(${index})">-</button>
+                        </div>
+                    </div>
+                    <div class="glooms-pc-history" id="glooms-history-${index}">
+                        ${gloomsRenderHistory(pc.history)}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function gloomsRenderHistory(history) {
+            if (!history || history.length === 0) return '<div style="color: #666; text-align: center; margin-top: 14px;">Sin registros</div>';
+            return history.slice().reverse().map(item => `
+                <div class="glooms-history-item ${item.amount >= 0 ? 'positive' : 'negative'}">
+                    <span>${item.amount > 0 ? '+' : ''}${item.amount}</span>
+                    <span class="time">${item.time}</span>
+                </div>
+            `).join('');
+        }
+
+        function gloomsHandleKeyDown(event, index) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                gloomsAddManual(index);
+            }
+        }
+
+        function gloomsAddAmount(index, amount) {
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            gloomsState.pcs[index].total += amount;
+            gloomsState.pcs[index].history.push({ amount, time });
+            gloomsUpdateUI(index);
+        }
+
+        function gloomsAddManual(index) {
+            const input = document.getElementById(`glooms-input-${index}`);
+            const val = parseInt(input.value);
+            if (!isNaN(val) && val > 0) {
+                gloomsAddAmount(index, val);
+                input.value = '';
+                input.focus();
+            }
+        }
+
+        function gloomsSubtractManual(index) {
+            const input = document.getElementById(`glooms-input-${index}`);
+            const val = parseInt(input.value);
+            if (!isNaN(val) && val > 0) {
+                gloomsAddAmount(index, -val);
+                input.value = '';
+                input.focus();
+            }
+        }
+
+        function gloomsUpdatePCName(index, name) {
+            gloomsState.pcs[index].name = name;
+            gloomsSaveData();
+        }
+
+        function gloomsUpdateUI(index) {
+            let subEl = document.getElementById(`glooms-subtotal-${index}`);
+            let histEl = document.getElementById(`glooms-history-${index}`);
+            if (subEl) subEl.innerText = gloomsState.pcs[index].total;
+            if (histEl) histEl.innerHTML = gloomsRenderHistory(gloomsState.pcs[index].history);
+            gloomsUpdateGrandTotal();
+            gloomsCalculateProfit();
+            gloomsSaveData();
+        }
+
+        function gloomsUpdateGrandTotal() {
+            const grandTotal = gloomsState.pcs.reduce((acc, pc) => acc + pc.total, 0);
+            let gtEl = document.getElementById('gloomsGrandTotal');
+            if (gtEl) gtEl.innerText = grandTotal;
+            gloomsCalculateProfit();
+        }
+
+        function gloomsCalculateProfit() {
+            let priceEl = document.getElementById('gloomsCalcPrice');
+            let qtyEl = document.getElementById('gloomsCalcQuantity');
+            let resEl = document.getElementById('gloomsCalcResult');
+            if (!priceEl || !qtyEl || !resEl) return;
+
+            const priceVal = parseFloat(priceEl.value) || 0;
+            const qtyInput = qtyEl.value;
+            
+            let quantity = 0;
+            if (qtyInput !== '' && !isNaN(parseInt(qtyInput))) {
+                quantity = parseInt(qtyInput);
+            } else {
+                quantity = gloomsState.pcs.reduce((acc, pc) => acc + pc.total, 0);
+            }
+
+            const totalGold = priceVal * quantity;
+            resEl.innerText = totalGold.toLocaleString() + ' gp';
+            gloomsSaveData();
+        }
+
+        function useGloomsHistoricalTotal(totalValue) {
+            let qtyEl = document.getElementById('gloomsCalcQuantity');
+            if (!qtyEl) return;
+            qtyEl.value = totalValue;
+            gloomsCalculateProfit();
+        }
+
+        function useGloomsGrandTotal() {
+            let gtEl = document.getElementById('gloomsGrandTotal');
+            let qtyEl = document.getElementById('gloomsCalcQuantity');
+            if (!gtEl || !qtyEl) return;
+            qtyEl.value = parseInt(gtEl.innerText) || 0;
+            gloomsCalculateProfit();
+        }
+
+        function gloomsFinishDay() {
+            const grandTotal = gloomsState.pcs.reduce((acc, pc) => acc + pc.total, 0);
+            if (grandTotal === 0) {
+                if (!confirm('Los contadores están en 0. ¿Deseas finalizar de todos modos?')) return;
+            }
+
+            const now = new Date();
+            const dateStr = now.toLocaleDateString([], { day: '2-digit', month: '2-digit', year: '2-digit' }) + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            const record = {
+                timestamp: now.getTime(),
+                date: dateStr,
+                pc1: gloomsState.pcs[0].total,
+                pc2: gloomsState.pcs[1].total,
+                pc3: gloomsState.pcs[2].total,
+                pc4: gloomsState.pcs[3].total,
+                total: grandTotal,
+                pcNames: gloomsState.pcs.map(p => p.name)
+            };
+
+            gloomsState.dailyRecords.unshift(record);
+            gloomsState.pcs.forEach(pc => { pc.total = 0; pc.history = []; });
+
+            gloomsRenderPCs();
+            gloomsUpdateGrandTotal();
+            gloomsRenderDailyRecords();
+            gloomsSaveData();
+        }
+
+        function gloomsRenderDailyRecords() {
+            const container = document.getElementById('gloomsDailyRecordsList');
+            if (!container) return;
+
+            if (gloomsState.dailyRecords.length === 0) {
+                container.innerHTML = '<div style="color: #666; text-align: center; font-size: 9px; padding: 4px;">No hay registros anteriores</div>';
+                return;
+            }
+
+            const sortedRecords = [...gloomsState.dailyRecords].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+            container.innerHTML = sortedRecords.map(rec => {
+                const p1 = rec.pcNames ? rec.pcNames[0] : 'PC 1';
+                const p2 = rec.pcNames ? rec.pcNames[1] : 'PC 2';
+                const p3 = rec.pcNames ? rec.pcNames[2] : 'PC 3';
+                const p4 = rec.pcNames ? rec.pcNames[3] : 'PC 4';
+
+                return `
+                    <div class="glooms-daily-row">
+                        <div class="glooms-daily-row-top">
+                            <span class="date">${rec.date}</span>
+                            <span class="total" onclick="useGloomsHistoricalTotal(${rec.total})">Total: ${rec.total}</span>
+                        </div>
+                        <div class="pcs-info">
+                            <span>${p1}: <strong>${rec.pc1}</strong></span>
+                            <span>${p2}: <strong>${rec.pc2}</strong></span>
+                            <span>${p3}: <strong>${rec.pc3}</strong></span>
+                            <span>${p4}: <strong>${rec.pc4}</strong></span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function gloomsResetCurrentDay() {
+            if (confirm('¿Reiniciar el conteo actual sin guardarlo?')) {
+                gloomsState.pcs.forEach(pc => { pc.total = 0; pc.history = []; });
+                gloomsRenderPCs();
+                gloomsUpdateGrandTotal();
+                gloomsSaveData();
+            }
+        }
+
+        function gloomsClearDailyRecords() {
+            if (confirm('¿Eliminar todo el historial de Glooms?')) {
+                gloomsState.dailyRecords = [];
+                gloomsRenderDailyRecords();
+                gloomsSaveData();
+            }
+        }
+
+        // ==========================================
+        // MÓDULO CONTROL CUENTAS TIBIA INTEGRADO
+        // ==========================================
+        const ACCOUNTS_STORAGE_KEY = 'tibia_accounts_v23';
+        const ACCOUNTS_STAMINA_MS = 72 * 60 * 60 * 1000;
+
+        const AccountsStorage = {
+            makeId() {
+                return 'id-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
+            },
+            load() {
+                try {
+                    const raw = localStorage.getItem(ACCOUNTS_STORAGE_KEY);
+                    if (!raw) return [];
+                    return JSON.parse(raw);
+                } catch (error) { return []; }
+            },
+            save(data) {
+                try { localStorage.setItem(ACCOUNTS_STORAGE_KEY, JSON.stringify(data)); return true; } catch (error) { return false; }
+            }
+        };
+
+        const AccountsStore = {
+            data: AccountsStorage.load(),
+            undoStack: [],
+            redoStack: [],
+            saveState() {
+                this.undoStack.push(JSON.stringify(this.data));
+                if (this.undoStack.length > 5) this.undoStack.shift();
+                this.redoStack = [];
+                AccountsUI.updateHistoryButtons();
+            },
+            undo() {
+                if (!this.undoStack.length) return false;
+                this.redoStack.push(JSON.stringify(this.data));
+                this.data = JSON.parse(this.undoStack.pop());
+                AccountsStorage.save(this.data);
+                AccountsUI.updateHistoryButtons();
+                return true;
+            },
+            redo() {
+                if (!this.redoStack.length) return false;
+                this.undoStack.push(JSON.stringify(this.data));
+                this.data = JSON.parse(this.redoStack.pop());
+                AccountsStorage.save(this.data);
+                AccountsUI.updateHistoryButtons();
+                return true;
+            },
+            findServer(id) { return this.data.find(s => String(s.id) === String(id)); },
+            findAccount(server, id) { return server && server.accs.find(a => String(a.id) === String(id)); },
+            addServer(name) {
+                const trimmed = name.trim();
+                if (!trimmed) return false;
+                this.saveState();
+                this.data.push({
+                    id: AccountsStorage.makeId(), name: trimmed, collapsed: false, pcTag: '',
+                    accs: [
+                        { id: AccountsStorage.makeId(), mail: '', botLinkedName: '', st: '', targetMs: 0 },
+                        { id: AccountsStorage.makeId(), mail: '', botLinkedName: '', st: '', targetMs: 0 },
+                        { id: AccountsStorage.makeId(), mail: '', botLinkedName: '', st: '', targetMs: 0 }
+                    ]
+                });
+                AccountsStorage.save(this.data);
+                return true;
+            },
+            removeServer(id) {
+                const server = this.findServer(id);
+                if (!server || !confirm(`¿Eliminar servidor «${server.name}»?`)) return false;
+                this.saveState();
+                this.data = this.data.filter(s => String(s.id) !== String(id));
+                AccountsStorage.save(this.data);
+                return true;
+            },
+            updateMail(serverId, accountId, value) {
+                const server = this.findServer(serverId);
+                const acc = this.findAccount(server, accountId);
+                if (!acc || acc.mail === value) return;
+                this.saveState();
+                acc.mail = value.slice(0, 254);
+                AccountsStorage.save(this.data);
+                AccountsUI.renderActiveBar();
+            },
+            updateBotLink(serverId, accountId, botName) {
+                const server = this.findServer(serverId);
+                const acc = this.findAccount(server, accountId);
+                if (!acc || acc.botLinkedName === botName) return;
+                this.saveState();
+                acc.botLinkedName = botName;
+                AccountsStorage.save(this.data);
+                UIComponents.renderFavs();
+                AccountsUI.render();
+            },
+            setPcTag(serverId, pcTag) {
+                const server = this.findServer(serverId);
+                if (!server || server.pcTag === pcTag) return;
+                this.saveState();
+                if (pcTag) this.data.forEach(s => { if (String(s.id) !== String(serverId) && s.pcTag === pcTag) s.pcTag = ''; });
+                server.pcTag = pcTag;
+                AccountsStorage.save(this.data);
+            },
+            toggleStatus(serverId, accountId, type) {
+                const server = this.findServer(serverId);
+                const acc = this.findAccount(server, accountId);
+                if (!acc) return;
+                this.saveState();
+                acc.st = (acc.st === type) ? '' : type;
+                acc.targetMs = (acc.st === 'stamina') ? Date.now() + ACCOUNTS_STAMINA_MS : 0;
+                AccountsStorage.save(this.data);
+                UIComponents.renderFavs();
+            },
+            toggleCollapse(serverId) {
+                const server = this.findServer(serverId);
+                if (!server) return;
+                this.saveState();
+                server.collapsed = !server.collapsed;
+                AccountsStorage.save(this.data);
+            },
+            toggleCollapseAll() {
+                if (!this.data.length) return false;
+                const targetState = this.data.some(s => !s.collapsed);
+                this.saveState();
+                this.data.forEach(s => { s.collapsed = targetState; });
+                AccountsStorage.save(this.data);
+                return true;
+            },
+            moveToTop(id) {
+                const index = this.data.findIndex(s => String(s.id) === String(id));
+                if (index > 0) {
+                    this.saveState();
+                    const [moved] = this.data.splice(index, 1);
+                    this.data.unshift(moved);
+                    AccountsStorage.save(this.data);
+                    return true;
+                }
+                return false;
+            }
+        };
+
+        const AccountsUI = {
+            updateHistoryButtons() {
+                document.getElementById('accUndoBtn').disabled = AccountsStore.undoStack.length === 0;
+                document.getElementById('accRedoBtn').disabled = AccountsStore.redoStack.length === 0;
+            },
+            formatStamina(target) {
+                const remaining = Number(target) - Date.now();
+                if (remaining <= 0) return '✅ Listo';
+                const hours = Math.floor(remaining / 3600000);
+                const minutes = Math.floor((remaining % 3600000) / 60000);
+                return hours >= 1 ? `${hours} h` : `${minutes > 0 ? minutes : 1} min`;
+            },
+            renderActiveBar() {
+                const bar = document.getElementById('accActiveServersBar');
+                bar.replaceChildren();
+                const active = AccountsStore.data.filter(s => s.accs.some(a => a.st === 'active'));
+                if (!active.length) {
+                    bar.appendChild(document.createElement('span'));
+                    bar.lastChild.className = 'acc-no-active-tag';
+                    bar.lastChild.textContent = 'Sin activos';
+                    return;
+                }
+                active.forEach(server => {
+                    const tag = document.createElement('button');
+                    tag.className = 'acc-active-tag';
+                    tag.textContent = server.name;
+                    tag.onclick = () => {
+                        server.collapsed = false;
+                        AccountsStorage.save(AccountsStore.data);
+                        AccountsUI.render();
+                        
+                        setTimeout(() => {
+                            const cardEl = document.getElementById(`acc-card-${server.id}`);
+                            if (cardEl) {
+                                cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                cardEl.classList.add('active-highlight');
+                                setTimeout(() => cardEl.classList.remove('active-highlight'), 2500);
+                            }
+                        }, 50);
+                    };
+                    bar.appendChild(tag);
+                });
+            },
+            render() {
+                AccountsUI.renderActiveBar();
+                const col1 = document.getElementById('accCol1');
+                const col2 = document.getElementById('accCol2');
+                col1.replaceChildren(); col2.replaceChildren();
+
+                if (!AccountsStore.data.length) {
+                    col1.innerHTML = '<div style="color:#666; font-size:11px;">No hay servidores agregados.</div>';
+                    AccountsUI.updateHistoryButtons();
+                    return;
+                }
+
+                AccountsStore.data.forEach((server, index) => {
+                    const card = document.createElement('section');
+                    card.id = `acc-card-${server.id}`;
+                    card.className = `acc-card ${server.collapsed ? 'collapsed' : ''}`;
+                    
+                    let countVal = server.accs.filter(a => a.mail && a.mail.trim() !== '').length;
+
+                    card.innerHTML = `
+                        <div class="acc-card-header">
+                            <button class="acc-priority-btn" title="Mover arriba">⬆</button>
+                            <div class="acc-drag-zone">${server.name}</div>
+                            ${server.pcTag ? `<span class="acc-pc-badge">${server.pcTag}</span>` : ''}
+                            <span class="acc-email-count" id="acc-count-${server.id}">${countVal}/3</span>
+                            <div class="acc-header-actions">
+                                <button class="acc-btn-delete">✕</button>
+                            </div>
+                        </div>
+                        <div class="acc-card-body"></div>
+                    `;
+
+                    card.querySelector('.acc-priority-btn').onclick = (e) => { e.stopPropagation(); AccountsStore.moveToTop(server.id); AccountsUI.render(); };
+                    
+                    card.querySelector('.acc-card-header').onclick = (e) => {
+                        if (e.target.closest('button')) return;
+                        AccountsStore.toggleCollapse(server.id); 
+                        AccountsUI.render();
+                    };
+
+                    card.querySelector('.acc-btn-delete').onclick = (e) => { e.stopPropagation(); if (AccountsStore.removeServer(server.id)) AccountsUI.render(); };
+                    
+                    const dragZone = card.querySelector('.acc-drag-zone');
+                    let timer;
+                    dragZone.addEventListener('pointerdown', (e) => {
+                        timer = setTimeout(() => openAccPcPopup(server.id, e.clientX, e.clientY + 4), 500);
+                    });
+                    dragZone.addEventListener('pointerup', () => clearTimeout(timer));
+                    dragZone.addEventListener('pointerleave', () => clearTimeout(timer));
+
+                    const body = card.querySelector('.acc-card-body');
+                    server.accs.forEach((acc, i) => {
+                        const row = document.createElement('div');
+                        row.id = `acc-row-${acc.id}`;
+                        row.className = `acc-row`;
+                        
+                        let botLinkText = acc.botLinkedName ? `🤖 ${acc.botLinkedName}` : '🤖 Bot...';
+                        
+                        row.innerHTML = `
+                            <div class="acc-row-top">
+                                <input type="text" class="acc-mail-input" value="${escapeQuotes(acc.mail)}" placeholder="Correo ${i+1}" maxlength="254" autocomplete="off" spellcheck="false">
+                                <button type="button" class="acc-bot-link-btn" title="Seleccionar bot vinculado">
+                                    <span class="bot-btn-label">${botLinkText}</span>
+                                    <span>▼</span>
+                                </button>
+                            </div>
+                            <div class="acc-actions">
+                                <button type="button" class="${acc.st === 'active' ? 'btn-act' : ''}">⚡ Activo</button>
+                                <button type="button" class="${acc.st === 'stamina' ? 'btn-sta' : ''}">⏳ ${acc.st === 'stamina' && acc.targetMs ? AccountsUI.formatStamina(acc.targetMs) : 'Stamina'}</button>
+                            </div>
+                        `;
+                        const inputMail = row.querySelector('.acc-mail-input');
+                        inputMail.oninput = () => {
+                            AccountsStore.updateMail(server.id, acc.id, inputMail.value);
+                            let freshCount = server.accs.filter(a => a.mail && a.mail.trim() !== '').length;
+                            const countEl = document.getElementById(`acc-count-${server.id}`);
+                            if (countEl) countEl.textContent = `${freshCount}/3`;
+                        };
+                        inputMail.onblur = () => {
+                            let val = inputMail.value.trim();
+                            if (val && !val.includes('@')) {
+                                inputMail.value = val + '@mozej.com';
+                                AccountsStore.updateMail(server.id, acc.id, inputMail.value);
+                                let freshCount = server.accs.filter(a => a.mail && a.mail.trim() !== '').length;
+                                const countEl = document.getElementById(`acc-count-${server.id}`);
+                                if (countEl) countEl.textContent = `${freshCount}/3`;
+                            }
+                        };
+                        inputMail.onkeydown = (e) => { if (e.key === 'Enter') inputMail.blur(); };
+
+                        const botBtn = row.querySelector('.acc-bot-link-btn');
+                        botBtn.onclick = (e) => {
+                            e.stopPropagation();
+                            const rect = botBtn.getBoundingClientRect();
+                            openBotSelectorPopup(server.id, acc.id, rect.left, rect.bottom + 4);
+                        };
+
+                        const btns = row.querySelectorAll('.acc-actions button');
+                        btns[0].onclick = () => { AccountsStore.toggleStatus(server.id, acc.id, 'active'); AccountsUI.render(); };
+                        btns[1].onclick = () => { AccountsStore.toggleStatus(server.id, acc.id, 'stamina'); AccountsUI.render(); };
+
+                        body.appendChild(row);
+                    });
+
+                    [col1, col2][index % 2].appendChild(card);
+                });
+                AccountsUI.updateHistoryButtons();
+            }
+        };
+
+        let activeServerIdForAccPc = null;
+        function openAccPcPopup(serverId, x, y) {
+            activeServerIdForAccPc = serverId;
+            const popup = document.getElementById('accPcPopup');
+            
+            ['PC1', 'PC2', 'PC3', 'PC4'].forEach(pcKey => {
+                const useSpan = document.getElementById(`accUse${pcKey}`);
+                if (useSpan) {
+                    const assignedSrv = AccountsStore.data.find(s => s.pcTag === pcKey && String(s.id) !== String(serverId));
+                    useSpan.textContent = assignedSrv ? `(${assignedSrv.name})` : '';
+                }
+            });
+
+            popup.style.left = Math.max(10, Math.min(x, window.innerWidth - 160)) + 'px';
+            popup.style.top = Math.max(10, Math.min(y, window.innerHeight - 200)) + 'px';
+            popup.classList.add('open');
+        }
+        function closeAccPcPopup() {
+            document.getElementById('accPcPopup').classList.remove('open');
+            activeServerIdForAccPc = null;
+        }
+
+        function openBotSelectorPopup(serverId, accountId, x, y) {
+            const popup = document.getElementById('accBotSelectorPopup');
+            let botsList = favorites.filter(f => (f.category || 'bots') === 'bots');
+
+            let linkedBotNames = new Set();
+            AccountsStore.data.forEach(srv => {
+                srv.accs.forEach(acc => {
+                    if (acc.botLinkedName) {
+                        linkedBotNames.add(acc.botLinkedName.toLowerCase().trim());
+                    }
+                });
+            });
+
+            let currentAcc = AccountsStore.findAccount(AccountsStore.findServer(serverId), accountId);
+            let currentAssigned = currentAcc && currentAcc.botLinkedName ? currentAcc.botLinkedName.toLowerCase().trim() : '';
+
+            let availableBots = botsList.filter(b => {
+                let bNameLower = b.name.toLowerCase().trim();
+                return bNameLower === currentAssigned || !linkedBotNames.has(bNameLower);
+            });
+
+            let html = `<button class="acc-bot-selector-item" onclick="selectBotForAccount('${serverId}', '${accountId}', '')">
+                <span class="acc-bot-selector-name" style="color:#aaa;">Ninguno (Desvincular)</span>
+            </button>`;
+
+            if (availableBots.length === 0) {
+                html += `<div style="padding: 8px; font-size:10px; color:#888; text-align:center;">No hay más bots disponibles</div>`;
+            } else {
+                availableBots.forEach(b => {
+                    let safeBName = escapeQuotes(b.name);
+                    let safeWorld = escapeQuotes(b.world || 'Desconocido');
+                    let levelStr = b.level ? `Nv. ${b.level}` : '';
+                    html += `
+                        <button class="acc-bot-selector-item" onclick="selectBotForAccount('${serverId}', '${accountId}', '${safeBName}')">
+                            <span class="acc-bot-selector-name">🤖 ${b.name}</span>
+                            <span class="acc-bot-selector-meta">${levelStr} | ${safeWorld}</span>
+                        </button>
+                    `;
+                });
+            }
+
+            popup.innerHTML = html;
+            popup.style.left = Math.max(10, Math.min(x, window.innerWidth - 210)) + 'px';
+            popup.style.top = Math.max(10, Math.min(y, window.innerHeight - 280)) + 'px';
+            popup.classList.add('open');
+        }
+
+        function closeBotSelectorPopup() {
+            document.getElementById('accBotSelectorPopup').classList.remove('open');
+        }
+
+        function selectBotForAccount(serverId, accountId, botName) {
+            AccountsStore.updateBotLink(serverId, accountId, botName);
+            closeBotSelectorPopup();
+        }
+
+        document.querySelectorAll('.acc-pc-popup-item').forEach(btn => {
+            btn.onclick = () => {
+                if (activeServerIdForAccPc) {
+                    AccountsStore.setPcTag(activeServerIdForAccPc, btn.dataset.pc);
+                    AccountsUI.render();
+                }
+                closeAccPcPopup();
+            };
+        });
+
+        document.addEventListener('click', (e) => {
+            const popup = document.getElementById('accPcPopup');
+            if (popup && !popup.contains(e.target)) closeAccPcPopup();
+            const botPopup = document.getElementById('accBotSelectorPopup');
+            if (botPopup && !botPopup.contains(e.target) && !e.target.classList.contains('acc-bot-link-btn') && !e.target.closest('.acc-bot-link-btn')) {
+                closeBotSelectorPopup();
+            }
+        });
+
+        function initAccountsLogic() {
+            AccountsUI.render();
+        }
+
+        document.getElementById('accAddSrv').onclick = () => {
+            const input = document.getElementById('accSrvName');
+            if (AccountsStore.addServer(input.value)) { input.value = ''; AccountsUI.render(); }
+        };
+        document.getElementById('accSrvName').onkeydown = (e) => { if (e.key === 'Enter') document.getElementById('accAddSrv').click(); };
+        document.getElementById('accUndoBtn').onclick = () => { if (AccountsStore.undo()) AccountsUI.render(); };
+        document.getElementById('accRedoBtn').onclick = () => { if (AccountsStore.redo()) AccountsUI.render(); };
+        document.getElementById('accToggleCollapseAll').onclick = () => { AccountsStore.toggleCollapseAll(); AccountsUI.render(); };
+
+        const AUTO_UPDATE_INTERVAL_MS = 5 * 60 * 1000;
         setInterval(() => {
             if (document.visibilityState === 'visible') CharacterManager.updateAll();
         }, AUTO_UPDATE_INTERVAL_MS);
+
+        window.addEventListener('load', () => {
+            CharacterManager.updateAll();
+        });
 
         UIComponents.updateNotiBadge();
         UIComponents.renderFavs();
